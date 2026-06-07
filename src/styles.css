@@ -92,7 +92,7 @@
     content: "";
     position: fixed;
     inset: 0;
-    background: linear-gradient(180deg, color-mix(in oklab, var(--color-background) 55%, transparent), color-mix(in oklab, var(--color-background) 75%, transparent));
+    background: linear-gradient(180deg, color-mix(in oklab, var(--color-background) 78%, transparent), color-mix(in oklab, var(--color-background) 90%, transparent));
     pointer-events: none;
     z-index: -1;
   }
