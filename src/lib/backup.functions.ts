@@ -17,24 +17,26 @@ export const backupDatabase = createServerFn({ method: "POST" })
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const tables = ["images", "profiles", "user_roles"] as const;
-    const tableDumps: Record<string, unknown[]> = {};
-
-    for (const t of tables) {
+    const tableNames = ["images", "profiles", "user_roles"] as const;
+    const tables: Record<string, unknown[]> = {};
+    for (const t of tableNames) {
       const { data, error } = await supabaseAdmin.from(t).select("*");
       if (error) throw new Error(`${t}: ${error.message}`);
-      tableDumps[t] = (data ?? []) as unknown[];
+      tables[t] = (data ?? []) as unknown[];
     }
 
     const { data: objects, error: storageErr } = await supabaseAdmin.storage
       .from("images")
       .list("", { limit: 1000, sortBy: { column: "created_at", order: "asc" } });
 
-    return {
+    const dump = {
       exported_at: new Date().toISOString(),
       version: 1,
-      tables: tableDumps,
+      tables,
       storage_images: storageErr ? [] : (objects ?? []),
       storage_error: storageErr?.message ?? null,
     };
+
+    // Return as a serialized JSON string so the RPC payload is fully serializable.
+    return { json: JSON.stringify(dump, null, 2) };
   });
