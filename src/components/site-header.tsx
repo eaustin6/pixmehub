@@ -1,11 +1,13 @@
 import { Link, useRouter } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
+import { useIsSuperAdmin } from "@/hooks/use-role";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { ImageIcon, Upload, LogOut, LayoutGrid } from "lucide-react";
+import { ImageIcon, Upload, LogOut, LayoutGrid, ShieldAlert } from "lucide-react";
 
 export function SiteHeader() {
   const { user } = useAuth();
+  const { isSuperAdmin } = useIsSuperAdmin();
   const router = useRouter();
 
   async function signOut() {
@@ -30,23 +32,31 @@ export function SiteHeader() {
               <span className="hidden sm:inline">Gallery</span>
             </Link>
           </Button>
+          <Button asChild size="sm" className="glow-ring">
+            <Link to="/upload">
+              <Upload className="h-4 w-4" />
+              Upload
+            </Link>
+          </Button>
           {user ? (
             <>
               <Button asChild variant="ghost" size="sm">
                 <Link to="/my">My uploads</Link>
               </Button>
-              <Button asChild size="sm" className="glow-ring">
-                <Link to="/upload">
-                  <Upload className="h-4 w-4" />
-                  Upload
-                </Link>
-              </Button>
+              {isSuperAdmin && (
+                <Button asChild variant="ghost" size="sm">
+                  <Link to="/admin">
+                    <ShieldAlert className="h-4 w-4" />
+                    <span className="hidden sm:inline">Admin</span>
+                  </Link>
+                </Button>
+              )}
               <Button variant="ghost" size="icon" onClick={signOut} aria-label="Sign out">
                 <LogOut className="h-4 w-4" />
               </Button>
             </>
           ) : (
-            <Button asChild size="sm" className="glow-ring">
+            <Button asChild variant="ghost" size="sm">
               <Link to="/auth">Sign in</Link>
             </Button>
           )}

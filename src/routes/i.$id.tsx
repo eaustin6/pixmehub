@@ -3,10 +3,11 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { signImage, formatBytes, type ImageRow } from "@/lib/images";
 import { useAuth } from "@/hooks/use-auth";
+import { useIsSuperAdmin } from "@/hooks/use-role";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { Copy, Trash2, Globe, Lock } from "lucide-react";
+import { Copy, Trash2, Globe, Lock, EyeOff, Eye } from "lucide-react";
 
 export const Route = createFileRoute("/i/$id")({
   head: () => ({ meta: [{ title: "Image — Lumen" }] }),
@@ -16,6 +17,7 @@ export const Route = createFileRoute("/i/$id")({
 function ImageDetail() {
   const { id } = Route.useParams();
   const { user } = useAuth();
+  const { isSuperAdmin } = useIsSuperAdmin();
   const navigate = useNavigate();
   const [row, setRow] = useState<ImageRow | null | "missing">(null);
   const [url, setUrl] = useState<string | null>(null);
@@ -29,7 +31,7 @@ function ImageDetail() {
         setRow("missing");
         return;
       }
-      setRow(data);
+      setRow(data as ImageRow);
       try {
         const u = await signImage(data.storage_path);
         if (!cancelled) setUrl(u);
@@ -58,7 +60,23 @@ function ImageDetail() {
       return;
     }
     toast.success("Deleted");
-    navigate({ to: "/my" });
+    navigate({ to: "/" });
+  }
+
+  async function toggleHidden() {
+    if (!row || row === "missing") return;
+    const next = !row.is_hidden;
+    const reason = next ? prompt("Reason (optional)") ?? null : null;
+    const { error } = await supabase
+      .from("images")
+      .update({ is_hidden: next, hidden_reason: reason })
+      .eq("id", row.id);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    setRow({ ...row, is_hidden: next, hidden_reason: reason });
+    toast.success(next ? "Image hidden" : "Image restored");
   }
 
   if (row === null) {
@@ -79,10 +97,17 @@ function ImageDetail() {
     );
   }
 
-  const isOwner = user?.id === row.user_id;
+  const isOwner = !!user && user.id === row.user_id;
+  const canManage = isOwner || isSuperAdmin;
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
+      {row.is_hidden && (
+        <div className="mb-4 rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          This image is hidden from the public gallery.
+          {row.hidden_reason && <> Reason: {row.hidden_reason}</>}
+        </div>
+      )}
       <div className="overflow-hidden rounded-2xl border border-border/60 bg-card">
         {url ? (
           <img src={url} alt={row.title ?? "Image"} className="mx-auto max-h-[78vh] w-full object-contain" />
@@ -107,14 +132,33 @@ function ImageDetail() {
             )}
             <span>{formatBytes(row.size_bytes)}</span>
             <span>{row.mime_type}</span>
+            {!row.user_id && <span className="italic">anonymous</span>}
           </p>
+          {row.tags?.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {row.tags.map((t) => (
+                <span
+                  key={t}
+                  className="rounded-full border border-border/60 bg-card px-2.5 py-0.5 text-xs text-muted-foreground"
+                >
+                  #{t}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button variant="secondary" onClick={copyLink}>
             <Copy className="h-4 w-4" />
             Copy link
           </Button>
-          {isOwner && (
+          {isSuperAdmin && (
+            <Button variant="secondary" onClick={toggleHidden}>
+              {row.is_hidden ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+              {row.is_hidden ? "Restore" : "Hide"}
+            </Button>
+          )}
+          {canManage && (
             <Button variant="destructive" onClick={onDelete}>
               <Trash2 className="h-4 w-4" />
               Delete
