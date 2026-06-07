@@ -175,22 +175,22 @@ function ImageDetail() {
           )}
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="secondary" onClick={copyLink}>
+          <Button variant="secondary" onClick={copyLink} className="flex-1 sm:flex-none">
             <Copy className="h-4 w-4" />
             Copy link
           </Button>
-          <Button onClick={onDownload} disabled={!url}>
+          <Button onClick={onDownload} disabled={!url} className="flex-1 sm:flex-none">
             <Download className="h-4 w-4" />
             Download
           </Button>
           {isSuperAdmin && (
-            <Button variant="secondary" onClick={toggleHidden}>
+            <Button variant="secondary" onClick={toggleHidden} className="flex-1 sm:flex-none">
               {row.is_hidden ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
               {row.is_hidden ? "Restore" : "Hide"}
             </Button>
           )}
           {canManage && (
-            <Button variant="destructive" onClick={onDelete}>
+            <Button variant="destructive" onClick={onDelete} className="flex-1 sm:flex-none">
               <Trash2 className="h-4 w-4" />
               Delete
             </Button>
