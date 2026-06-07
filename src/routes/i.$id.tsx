@@ -50,6 +50,26 @@ function ImageDetail() {
     toast.success("Link copied");
   }
 
+  async function onDownload() {
+    if (!url || !row || row === "missing") return;
+    try {
+      const res = await fetch(url);
+      const blob = await res.blob();
+      const ext = (row.mime_type?.split("/")[1] ?? "jpg").replace("jpeg", "jpg");
+      const name = `${(row.title ?? "image").replace(/[^a-z0-9-_]+/gi, "_")}.${ext}`;
+      const objUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = objUrl;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(objUrl);
+    } catch {
+      toast.error("Download failed");
+    }
+  }
+
   async function onDelete() {
     if (!row || row === "missing") return;
     if (!confirm("Delete this image? This cannot be undone.")) return;
