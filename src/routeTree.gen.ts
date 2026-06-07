@@ -14,6 +14,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as IIdRouteImport } from './routes/i.$id'
+import { Route as AIdRouteImport } from './routes/a.$id'
 import { Route as AuthenticatedMyRouteImport } from './routes/_authenticated/my'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 
@@ -41,6 +42,11 @@ const IIdRoute = IIdRouteImport.update({
   path: '/i/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AIdRoute = AIdRouteImport.update({
+  id: '/a/$id',
+  path: '/a/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedMyRoute = AuthenticatedMyRouteImport.update({
   id: '/my',
   path: '/my',
@@ -58,6 +64,7 @@ export interface FileRoutesByFullPath {
   '/upload': typeof UploadRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/my': typeof AuthenticatedMyRoute
+  '/a/$id': typeof AIdRoute
   '/i/$id': typeof IIdRoute
 }
 export interface FileRoutesByTo {
@@ -66,6 +73,7 @@ export interface FileRoutesByTo {
   '/upload': typeof UploadRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/my': typeof AuthenticatedMyRoute
+  '/a/$id': typeof AIdRoute
   '/i/$id': typeof IIdRoute
 }
 export interface FileRoutesById {
@@ -76,13 +84,14 @@ export interface FileRoutesById {
   '/upload': typeof UploadRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/my': typeof AuthenticatedMyRoute
+  '/a/$id': typeof AIdRoute
   '/i/$id': typeof IIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/upload' | '/admin' | '/my' | '/i/$id'
+  fullPaths: '/' | '/auth' | '/upload' | '/admin' | '/my' | '/a/$id' | '/i/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/upload' | '/admin' | '/my' | '/i/$id'
+  to: '/' | '/auth' | '/upload' | '/admin' | '/my' | '/a/$id' | '/i/$id'
   id:
     | '__root__'
     | '/'
@@ -91,6 +100,7 @@ export interface FileRouteTypes {
     | '/upload'
     | '/_authenticated/admin'
     | '/_authenticated/my'
+    | '/a/$id'
     | '/i/$id'
   fileRoutesById: FileRoutesById
 }
@@ -99,6 +109,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   UploadRoute: typeof UploadRoute
+  AIdRoute: typeof AIdRoute
   IIdRoute: typeof IIdRoute
 }
 
@@ -139,6 +150,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/a/$id': {
+      id: '/a/$id'
+      path: '/a/$id'
+      fullPath: '/a/$id'
+      preLoaderRoute: typeof AIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/my': {
       id: '/_authenticated/my'
       path: '/my'
@@ -174,6 +192,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   UploadRoute: UploadRoute,
+  AIdRoute: AIdRoute,
   IIdRoute: IIdRoute,
 }
 export const routeTree = rootRouteImport

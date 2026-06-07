@@ -16,6 +16,8 @@ export type Database = {
     Tables: {
       images: {
         Row: {
+          album_id: string | null
+          album_title: string | null
           created_at: string
           height: number | null
           hidden_reason: string | null
@@ -31,6 +33,8 @@ export type Database = {
           width: number | null
         }
         Insert: {
+          album_id?: string | null
+          album_title?: string | null
           created_at?: string
           height?: number | null
           hidden_reason?: string | null
@@ -46,6 +50,8 @@ export type Database = {
           width?: number | null
         }
         Update: {
+          album_id?: string | null
+          album_title?: string | null
           created_at?: string
           height?: number | null
           hidden_reason?: string | null

@@ -13,6 +13,8 @@ export type ImageRow = {
   is_hidden: boolean;
   hidden_reason: string | null;
   tags: string[];
+  album_id: string | null;
+  album_title: string | null;
   created_at: string;
 };
 
