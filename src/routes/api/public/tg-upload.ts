@@ -15,12 +15,13 @@ export const Route = createFileRoute("/api/public/tg-upload")({
 
         const auth = request.headers.get("authorization") ?? "";
         const bearer = auth.replace(/^Bearer\s+/i, "");
-        if (!bearer) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { data: u, error: uErr } = await supabaseAdmin.auth.getUser(bearer);
-        if (uErr || !u.user) return Response.json({ error: "Unauthorized" }, { status: 401 });
-        const userId = u.user.id;
+        let userId: string | null = null;
+        if (bearer) {
+          const { data: u, error: uErr } = await supabaseAdmin.auth.getUser(bearer);
+          if (!uErr && u.user) userId = u.user.id;
+        }
 
         let form: FormData;
         try {
@@ -42,9 +43,9 @@ export const Route = createFileRoute("/api/public/tg-upload")({
 
         const title = ((form.get("title") as string | null) ?? "").slice(0, 200) || null;
         const tagsRaw = (form.get("tags") as string | null) ?? "[]";
-        const isPublic = (form.get("is_public") as string | null) === "true";
-        const albumId = ((form.get("album_id") as string | null) || "").trim() || null;
-        const albumTitle = ((form.get("album_title") as string | null) || "").trim() || null;
+        const isPublic = userId ? (form.get("is_public") as string | null) === "true" : true;
+        const albumId = userId ? (((form.get("album_id") as string | null) || "").trim() || null) : null;
+        const albumTitle = userId ? (((form.get("album_title") as string | null) || "").trim() || null) : null;
         const widthRaw = Number(form.get("width"));
         const heightRaw = Number(form.get("height"));
         const width = Number.isFinite(widthRaw) && widthRaw > 0 ? widthRaw : null;

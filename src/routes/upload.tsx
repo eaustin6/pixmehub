@@ -116,20 +116,20 @@ function UploadPage() {
 
   async function onUpload() {
     if (items.length === 0) return;
-    if (isAnon) {
-      toast.error("Please sign in to upload");
-      return;
-    }
     setBusy(true);
     setProgress(2);
 
-    const { data: sess } = await supabase.auth.getSession();
-    const bearer = sess.session?.access_token;
-    if (!bearer) {
-      toast.error("Session expired — sign in again");
-      setBusy(false);
-      return;
+    let bearer: string | undefined;
+    if (user) {
+      const { data: sess } = await supabase.auth.getSession();
+      bearer = sess.session?.access_token;
+      if (!bearer) {
+        toast.error("Session expired — sign in again");
+        setBusy(false);
+        return;
+      }
     }
+
 
     const album_id = isAlbum ? crypto.randomUUID() : null;
     const album_title = isAlbum ? albumTitle.trim() || "Untitled album" : null;
@@ -156,7 +156,7 @@ function UploadPage() {
 
         const res = await fetch("/api/public/tg-upload", {
           method: "POST",
-          headers: { Authorization: `Bearer ${bearer}` },
+          headers: bearer ? { Authorization: `Bearer ${bearer}` } : undefined,
           body: fd,
         });
         if (!res.ok) {
@@ -196,7 +196,6 @@ function UploadPage() {
       <p className="mt-1 text-sm text-muted-foreground">
         JPG, PNG, WebP, GIF, or AVIF · up to 50 MB each · up to {MAX_FILES} files.
         Files are stored in a private Telegram channel — unlimited capacity.
-        {isAnon && " Please sign in to upload."}
       </p>
 
       <div className="mt-6 space-y-4">
