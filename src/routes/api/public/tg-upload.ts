@@ -73,13 +73,7 @@ export const Route = createFileRoute("/api/public/tg-upload")({
         const tgJson = (await tgRes.json()) as {
           ok: boolean;
           description?: string;
-          result?: {
-            message_id: number;
-            document?: { file_id: string };
-            photo?: Array<{ file_id: string }>;
-            video?: { file_id: string };
-            animation?: { file_id: string };
-          };
+          result?: Record<string, unknown> & { message_id: number };
         };
 
         if (!tgJson.ok || !tgJson.result) {
@@ -89,14 +83,31 @@ export const Route = createFileRoute("/api/public/tg-upload")({
           );
         }
 
-        const fileId =
-          tgJson.result.document?.file_id ??
-          tgJson.result.video?.file_id ??
-          tgJson.result.animation?.file_id ??
-          tgJson.result.photo?.[tgJson.result.photo.length - 1]?.file_id;
+        const findFileId = (obj: unknown): string | null => {
+          if (!obj || typeof obj !== "object") return null;
+          for (const [k, v] of Object.entries(obj as Record<string, unknown>)) {
+            if (k === "file_id" && typeof v === "string") return v;
+            if (Array.isArray(v)) {
+              for (const item of v) {
+                const found = findFileId(item);
+                if (found) return found;
+              }
+            } else if (v && typeof v === "object") {
+              const found = findFileId(v);
+              if (found) return found;
+            }
+          }
+          return null;
+        };
+
+        const fileId = findFileId(tgJson.result);
 
         if (!fileId) {
-          return Response.json({ error: "Telegram returned no file_id" }, { status: 502 });
+          console.error("[tg-upload] no file_id in result", JSON.stringify(tgJson.result));
+          return Response.json(
+            { error: `Telegram returned no file_id. Keys: ${Object.keys(tgJson.result).join(",")}` },
+            { status: 502 },
+          );
         }
 
         const { data: row, error: insErr } = await supabaseAdmin
