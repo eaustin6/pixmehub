@@ -7,7 +7,7 @@ import { useIsSuperAdmin } from "@/hooks/use-role";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { Copy, Trash2, Globe, Lock, EyeOff, Eye } from "lucide-react";
+import { Copy, Trash2, Globe, Lock, EyeOff, Eye, Download } from "lucide-react";
 
 export const Route = createFileRoute("/i/$id")({
   head: () => ({ meta: [{ title: "Image — Lumen" }] }),
@@ -48,6 +48,26 @@ function ImageDetail() {
     if (typeof window === "undefined") return;
     await navigator.clipboard.writeText(window.location.href);
     toast.success("Link copied");
+  }
+
+  async function onDownload() {
+    if (!url || !row || row === "missing") return;
+    try {
+      const res = await fetch(url);
+      const blob = await res.blob();
+      const ext = (row.mime_type?.split("/")[1] ?? "jpg").replace("jpeg", "jpg");
+      const name = `${(row.title ?? "image").replace(/[^a-z0-9-_]+/gi, "_")}.${ext}`;
+      const objUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = objUrl;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(objUrl);
+    } catch {
+      toast.error("Download failed");
+    }
   }
 
   async function onDelete() {
@@ -151,6 +171,10 @@ function ImageDetail() {
           <Button variant="secondary" onClick={copyLink}>
             <Copy className="h-4 w-4" />
             Copy link
+          </Button>
+          <Button onClick={onDownload} disabled={!url}>
+            <Download className="h-4 w-4" />
+            Download
           </Button>
           {isSuperAdmin && (
             <Button variant="secondary" onClick={toggleHidden}>
