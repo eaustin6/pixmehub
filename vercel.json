@@ -1,0 +1,21 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "bun run build:client",
+  "outputDirectory": "dist/client",
+  "installCommand": "bun install",
+  "framework": null,
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://pixmehub.lovable.app/api/:path*"
+    },
+    {
+      "source": "/_serverFn/:path*",
+      "destination": "https://pixmehub.lovable.app/_serverFn/:path*"
+    },
+    {
+      "source": "/((?!assets/|favicon|.*\\..*).*)",
+      "destination": "/index.html"
+    }
+  ]
+}
