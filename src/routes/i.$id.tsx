@@ -7,7 +7,7 @@ import { useIsSuperAdmin } from "@/hooks/use-role";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { Copy, Trash2, Globe, Lock, EyeOff, Eye } from "lucide-react";
+import { Copy, Trash2, Globe, Lock, EyeOff, Eye, Download } from "lucide-react";
 
 export const Route = createFileRoute("/i/$id")({
   head: () => ({ meta: [{ title: "Image — Lumen" }] }),
