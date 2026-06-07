@@ -19,6 +19,7 @@ import {
   ShieldAlert,
   Menu,
   User,
+  Images as ImagesIcon,
 } from "lucide-react";
 
 export function SiteHeader() {
@@ -53,6 +54,12 @@ export function SiteHeader() {
             <Link to="/my">
               <User className="h-4 w-4" />
               My uploads
+            </Link>
+          </Button>
+          <Button asChild variant="ghost" size="sm" onClick={() => setOpen(false)}>
+            <Link to="/albums">
+              <ImagesIcon className="h-4 w-4" />
+              Albums
             </Link>
           </Button>
           {isSuperAdmin && (
