@@ -2,8 +2,6 @@ import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { signImage, formatBytes, type ImageRow } from "@/lib/images";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const _signImage = signImage;
 import { useAuth } from "@/hooks/use-auth";
 import { useIsSuperAdmin } from "@/hooks/use-role";
 import { Button } from "@/components/ui/button";
