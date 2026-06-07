@@ -65,6 +65,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:description", content: "Upload, share, and discover beautiful images." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Lumen — Image hosting" },
+      { name: "twitter:description", content: "Upload, share, and discover beautiful images." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/1e060951-0979-44fc-8a7e-bba7a784960f/id-preview-aeed3208--75a8ad67-6dd7-4b1a-aeb0-ff0401908b7d.lovable.app-1780834603482.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/1e060951-0979-44fc-8a7e-bba7a784960f/id-preview-aeed3208--75a8ad67-6dd7-4b1a-aeb0-ff0401908b7d.lovable.app-1780834603482.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
