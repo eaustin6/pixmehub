@@ -7,14 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { parseTags, resizeImage } from "@/lib/images";
+import { parseTags } from "@/lib/images";
 import { toast } from "sonner";
 import { ImagePlus, Loader2, X, Images as ImagesIcon } from "lucide-react";
 
@@ -26,13 +19,6 @@ export const Route = createFileRoute("/upload")({
 const ACCEPT = "image/png,image/jpeg,image/webp,image/gif,image/avif";
 const MAX_BYTES = 50 * 1024 * 1024;
 const MAX_FILES = 30;
-
-const RESIZE_OPTS = [
-  { label: "Original (no resize)", value: "0" },
-  { label: "Large (2048px)", value: "2048" },
-  { label: "Medium (1280px)", value: "1280" },
-  { label: "Small (800px)", value: "800" },
-];
 
 type Picked = { file: File; preview: string; title: string };
 
