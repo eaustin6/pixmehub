@@ -15,12 +15,13 @@ export const Route = createFileRoute("/api/public/tg-upload")({
 
         const auth = request.headers.get("authorization") ?? "";
         const bearer = auth.replace(/^Bearer\s+/i, "");
-        if (!bearer) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { data: u, error: uErr } = await supabaseAdmin.auth.getUser(bearer);
-        if (uErr || !u.user) return Response.json({ error: "Unauthorized" }, { status: 401 });
-        const userId = u.user.id;
+        let userId: string | null = null;
+        if (bearer) {
+          const { data: u, error: uErr } = await supabaseAdmin.auth.getUser(bearer);
+          if (!uErr && u.user) userId = u.user.id;
+        }
 
         let form: FormData;
         try {
