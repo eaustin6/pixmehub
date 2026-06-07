@@ -10,7 +10,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
-const searchSchema = z.object({ redirect: z.string().optional() });
+const searchSchema = z.object({
+  redirect: z
+    .string()
+    .regex(/^\/[^/]/, "must be a relative path")
+    .optional(),
+});
 
 export const Route = createFileRoute("/auth")({
   validateSearch: searchSchema,
