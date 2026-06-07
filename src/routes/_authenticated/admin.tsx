@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { ImageGrid } from "@/components/image-grid";
@@ -11,8 +11,8 @@ import {
   TabsTrigger,
   TabsContent,
 } from "@/components/ui/tabs";
-import { ShieldAlert, Upload, Database, Loader2 } from "lucide-react";
-import { backupDatabase } from "@/lib/backup.functions";
+import { ShieldAlert, Upload, Database, Loader2, Upload as UploadIcon } from "lucide-react";
+import { backupDatabase, restoreDatabase } from "@/lib/backup.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -24,7 +24,10 @@ function AdminPage() {
   const { isSuperAdmin, loading } = useIsSuperAdmin();
   const [search, setSearch] = useState("");
   const [backingUp, setBackingUp] = useState(false);
+  const [restoring, setRestoring] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
   const runBackup = useServerFn(backupDatabase);
+  const runRestore = useServerFn(restoreDatabase);
 
   async function onBackup() {
     setBackingUp(true);
@@ -45,6 +48,25 @@ function AdminPage() {
       toast.error(err instanceof Error ? err.message : "Backup failed");
     } finally {
       setBackingUp(false);
+    }
+  }
+
+  async function onRestoreFile(file: File) {
+    if (!confirm(`Restore from "${file.name}"? Existing rows with matching IDs will be overwritten.`)) return;
+    setRestoring(true);
+    try {
+      const json = await file.text();
+      const res = await runRestore({ data: { json } });
+      toast.success(
+        `Restored: ${Object.entries(res.counts)
+          .map(([t, n]) => `${t} ${n}`)
+          .join(", ")}`,
+      );
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Restore failed");
+    } finally {
+      setRestoring(false);
+      if (fileRef.current) fileRef.current.value = "";
     }
   }
 
@@ -85,11 +107,26 @@ function AdminPage() {
             {backingUp ? <Loader2 className="h-4 w-4 animate-spin" /> : <Database className="h-4 w-4" />}
             Backup database
           </Button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="application/json,.json"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) onRestoreFile(f);
+            }}
+          />
+          <Button variant="outline" onClick={() => fileRef.current?.click()} disabled={restoring}>
+            {restoring ? <Loader2 className="h-4 w-4 animate-spin" /> : <UploadIcon className="h-4 w-4" />}
+            Restore backup
+          </Button>
         </div>
       </div>
       <p className="mb-6 text-sm text-muted-foreground">
-        Manage every image on the platform, upload new files, or download a full JSON
-        snapshot of the database (images, profiles, roles, storage listing).
+        Manage every image on the platform, upload new files, download a JSON snapshot of
+        the database (images, profiles, roles, storage listing), or restore from a previous
+        backup file.
       </p>
       <Input
         value={search}
