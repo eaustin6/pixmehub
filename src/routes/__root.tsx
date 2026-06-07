@@ -111,13 +111,37 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url(${bgSky.url})` }}
+      />
+      <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 bg-background/70 backdrop-blur-[2px]" />
       <div className="flex min-h-screen flex-col">
         <SiteHeader />
         <main className="flex-1">
           <Outlet />
         </main>
-        <footer className="border-t border-border/60 bg-background/50 py-6 text-center text-xs text-muted-foreground">
-          Built with <span className="text-red-500">❤</span> by Niaz Nafis
+        <footer className="border-t border-border/60 bg-background/30 py-6 text-center backdrop-blur-sm">
+          <a
+            href="https://github.com/"
+            target="_blank"
+            rel="noreferrer"
+            className="group inline-flex items-center gap-2 rounded-full border border-primary/30 bg-gradient-to-r from-primary/10 via-fuchsia-500/10 to-amber-400/10 px-4 py-1.5 text-xs font-medium tracking-wide text-foreground/90 shadow-[0_0_25px_-5px_hsl(var(--primary)/0.5)] transition hover:scale-[1.03] hover:shadow-[0_0_30px_-2px_hsl(var(--primary)/0.7)]"
+          >
+            <span className="text-base animate-pulse">✦</span>
+            <span>
+              Crafted with{" "}
+              <span className="inline-block animate-pulse bg-gradient-to-r from-rose-400 via-fuchsia-400 to-violet-400 bg-clip-text text-transparent">
+                ♥
+              </span>{" "}
+              by{" "}
+              <span className="bg-gradient-to-r from-primary via-fuchsia-400 to-amber-300 bg-clip-text font-semibold text-transparent">
+                Niaz Nafis
+              </span>
+            </span>
+            <span className="text-base animate-pulse">✦</span>
+          </a>
         </footer>
       </div>
       <Toaster />
