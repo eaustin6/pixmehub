@@ -276,22 +276,6 @@ function UploadPage() {
           </p>
         </div>
 
-        <div className="space-y-1.5">
-          <Label>Resize</Label>
-          <Select value={maxDim} onValueChange={setMaxDim}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {RESIZE_OPTS.map((o) => (
-                <SelectItem key={o.value} value={o.value}>
-                  {o.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
         {!isAnon && (
           <div className="flex items-center justify-between rounded-xl border border-border/60 bg-card/60 px-4 py-3">
             <div>
