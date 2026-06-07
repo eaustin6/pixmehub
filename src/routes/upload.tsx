@@ -124,11 +124,10 @@ function UploadPage() {
     try {
       for (let i = 0; i < items.length; i++) {
         const it = items[i];
-        const processed = await resizeImage(it.file, Number(maxDim));
-        const dims = await getDimensions(processed);
+        const dims = await getDimensions(it.file);
 
         const fd = new FormData();
-        fd.append("file", processed, processed.name);
+        fd.append("file", it.file, it.file.name);
         fd.append("title", it.title || "");
         fd.append("tags", JSON.stringify(tags));
         fd.append("is_public", String(isPublic));
