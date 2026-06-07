@@ -105,7 +105,7 @@ function Home() {
             </Link>
           </Button>
           <Button asChild size="lg" variant="secondary" className="w-full sm:w-auto">
-            <Link to="/_authenticated/my" params={{}}>
+            <Link to="/my">
               <Images className="h-4 w-4" />
               My uploads
             </Link>
