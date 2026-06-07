@@ -18,26 +18,23 @@ export const backupDatabase = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const tables = ["images", "profiles", "user_roles"] as const;
-    const dump: Record<string, unknown> = {
-      exported_at: new Date().toISOString(),
-      version: 1,
-    };
+    const tableDumps: Record<string, unknown[]> = {};
 
     for (const t of tables) {
       const { data, error } = await supabaseAdmin.from(t).select("*");
       if (error) throw new Error(`${t}: ${error.message}`);
-      dump[t] = data ?? [];
+      tableDumps[t] = (data ?? []) as unknown[];
     }
 
-    // List storage objects so the backup is also useful for media
     const { data: objects, error: storageErr } = await supabaseAdmin.storage
       .from("images")
       .list("", { limit: 1000, sortBy: { column: "created_at", order: "asc" } });
-    if (storageErr) {
-      dump.storage_error = storageErr.message;
-    } else {
-      dump.storage_images = objects ?? [];
-    }
 
-    return dump;
+    return {
+      exported_at: new Date().toISOString(),
+      version: 1,
+      tables: tableDumps,
+      storage_images: storageErr ? [] : (objects ?? []),
+      storage_error: storageErr?.message ?? null,
+    };
   });
