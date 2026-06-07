@@ -82,8 +82,19 @@
     min-height: 100%;
   }
   body {
-    background-image: var(--gradient-hero);
+    background-image: url("/__l5e/assets-v1/6fa6befc-072e-43dc-b923-27e23b8a40b8/bg-sky.jpeg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     background-attachment: fixed;
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(180deg, color-mix(in oklab, var(--color-background) 55%, transparent), color-mix(in oklab, var(--color-background) 75%, transparent));
+    pointer-events: none;
+    z-index: -1;
   }
 }
 
