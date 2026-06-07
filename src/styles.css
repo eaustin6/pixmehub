@@ -90,3 +90,25 @@
 @utility glow-ring {
   box-shadow: var(--shadow-glow);
 }
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-14px) rotate(2deg); }
+}
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0) rotate(2deg); }
+  50% { transform: translateY(-10px) rotate(-3deg); }
+}
+@keyframes twinkle {
+  0%, 100% { opacity: 0.15; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+@utility animate-float {
+  animation: float 5s ease-in-out infinite;
+}
+@utility animate-float-slow {
+  animation: float-slow 7s ease-in-out infinite;
+}
+@utility animate-twinkle {
+  animation: twinkle 3s ease-in-out infinite;
+}
