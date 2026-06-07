@@ -60,7 +60,7 @@ function AuthPage() {
         toast.success("Account created — check your email to confirm.");
       }
       router.invalidate();
-      navigate({ to: redirect ?? "/" });
+      navigate({ to: redirect });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Authentication failed");
     } finally {
@@ -80,7 +80,7 @@ function AuthPage() {
       }
       if (result.redirected) return;
       router.invalidate();
-      navigate({ to: redirect ?? "/" });
+      navigate({ to: redirect });
     } finally {
       setBusy(false);
     }
