@@ -44,7 +44,7 @@
   --secondary: oklch(0.27 0.018 260);
   --secondary-foreground: oklch(0.97 0.005 260);
   --muted: oklch(0.25 0.014 260);
-  --muted-foreground: oklch(0.7 0.02 260);
+  --muted-foreground: oklch(0.88 0.015 260);
   --accent: oklch(0.32 0.02 260);
   --accent-foreground: oklch(0.97 0.005 260);
   --destructive: oklch(0.62 0.22 25);
@@ -92,7 +92,7 @@
     content: "";
     position: fixed;
     inset: 0;
-    background: linear-gradient(180deg, color-mix(in oklab, var(--color-background) 55%, transparent), color-mix(in oklab, var(--color-background) 75%, transparent));
+    background: linear-gradient(180deg, color-mix(in oklab, var(--color-background) 78%, transparent), color-mix(in oklab, var(--color-background) 90%, transparent));
     pointer-events: none;
     z-index: -1;
   }
