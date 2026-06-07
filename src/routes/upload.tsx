@@ -29,7 +29,6 @@ function UploadPage() {
   const [items, setItems] = useState<Picked[]>([]);
   const [albumTitle, setAlbumTitle] = useState("");
   const [tagsInput, setTagsInput] = useState("");
-  const [maxDim, setMaxDim] = useState("2048");
   const [isPublic, setIsPublic] = useState(true);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState(0);
