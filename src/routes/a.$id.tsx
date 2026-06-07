@@ -42,6 +42,34 @@ function AlbumPage() {
     toast.success("Link copied");
   }
 
+  async function downloadOne(img: ImageWithUrl) {
+    try {
+      const res = await fetch(img.url);
+      const blob = await res.blob();
+      const ext = (img.mime_type?.split("/")[1] ?? "jpg").replace("jpeg", "jpg");
+      const name = `${(img.title ?? "image").replace(/[^a-z0-9-_]+/gi, "_")}.${ext}`;
+      const objUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = objUrl;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(objUrl);
+    } catch {
+      toast.error("Download failed");
+    }
+  }
+
+  async function downloadAll() {
+    if (!items) return;
+    toast.message(`Downloading ${items.length} images…`);
+    for (const img of items) {
+      await downloadOne(img);
+      await new Promise((r) => setTimeout(r, 250));
+    }
+  }
+
   if (items === null) {
     return (
       <div className="mx-auto max-w-5xl px-4 py-10">
