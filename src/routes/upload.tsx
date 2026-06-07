@@ -7,6 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { parseTags, resizeImage } from "@/lib/images";
 import { toast } from "sonner";
 import { ImagePlus, Loader2, X } from "lucide-react";
 
@@ -18,6 +26,13 @@ export const Route = createFileRoute("/upload")({
 const ACCEPT = "image/png,image/jpeg,image/webp,image/gif,image/avif";
 const MAX_BYTES = 15 * 1024 * 1024;
 
+const RESIZE_OPTS = [
+  { label: "Original (no resize)", value: "0" },
+  { label: "Large (2048px)", value: "2048" },
+  { label: "Medium (1280px)", value: "1280" },
+  { label: "Small (800px)", value: "800" },
+];
+
 function UploadPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -25,9 +40,13 @@ function UploadPage() {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [title, setTitle] = useState("");
+  const [tagsInput, setTagsInput] = useState("");
+  const [maxDim, setMaxDim] = useState("2048");
   const [isPublic, setIsPublic] = useState(true);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState(0);
+
+  const isAnon = !user;
 
   function selectFile(f: File | null) {
     if (!f) return;
@@ -68,32 +87,41 @@ function UploadPage() {
   }
 
   async function onUpload() {
-    if (!file || !user) return;
+    if (!file) return;
+    if (isAnon && !isPublic) {
+      toast.error("Anonymous uploads must be public");
+      return;
+    }
     setBusy(true);
     setProgress(10);
     try {
-      const ext = file.name.split(".").pop() ?? "bin";
-      const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
-      const dims = await getDimensions(file);
-      setProgress(35);
+      const processed = await resizeImage(file, Number(maxDim));
+      setProgress(30);
+
+      const ext = processed.name.split(".").pop() ?? "bin";
+      const folder = user ? user.id : "anon";
+      const path = `${folder}/${crypto.randomUUID()}.${ext}`;
+      const dims = await getDimensions(processed);
+      setProgress(45);
 
       const { error: upErr } = await supabase.storage
         .from("images")
-        .upload(path, file, { contentType: file.type, upsert: false });
+        .upload(path, processed, { contentType: processed.type, upsert: false });
       if (upErr) throw upErr;
       setProgress(75);
 
       const { data: row, error: insErr } = await supabase
         .from("images")
         .insert({
-          user_id: user.id,
+          user_id: user?.id ?? null,
           storage_path: path,
           title: title || null,
           width: dims?.w ?? null,
           height: dims?.h ?? null,
-          size_bytes: file.size,
-          mime_type: file.type,
-          is_public: isPublic,
+          size_bytes: processed.size,
+          mime_type: processed.type,
+          is_public: isAnon ? true : isPublic,
+          tags: parseTags(tagsInput),
         })
         .select("id")
         .single();
@@ -114,6 +142,7 @@ function UploadPage() {
       <h1 className="text-2xl font-semibold tracking-tight">Upload an image</h1>
       <p className="mt-1 text-sm text-muted-foreground">
         JPG, PNG, WebP, GIF, or AVIF · up to 15 MB.
+        {isAnon && " You're uploading anonymously — image will be public."}
       </p>
 
       <div className="mt-6 space-y-4">
@@ -166,15 +195,49 @@ function UploadPage() {
           />
         </div>
 
-        <div className="flex items-center justify-between rounded-xl border border-border/60 bg-card/60 px-4 py-3">
-          <div>
-            <p className="text-sm font-medium">Public</p>
-            <p className="text-xs text-muted-foreground">
-              Show this image in the public gallery.
-            </p>
-          </div>
-          <Switch checked={isPublic} onCheckedChange={setIsPublic} />
+        <div className="space-y-1.5">
+          <Label htmlFor="tags">Tags</Label>
+          <Input
+            id="tags"
+            value={tagsInput}
+            onChange={(e) => setTagsInput(e.target.value)}
+            placeholder="nature, sunset, travel"
+          />
+          <p className="text-xs text-muted-foreground">
+            Comma or space separated · up to 12 tags
+          </p>
         </div>
+
+        <div className="space-y-1.5">
+          <Label>Resize</Label>
+          <Select value={maxDim} onValueChange={setMaxDim}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {RESIZE_OPTS.map((o) => (
+                <SelectItem key={o.value} value={o.value}>
+                  {o.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            Longest edge will be limited. Saves bandwidth and storage.
+          </p>
+        </div>
+
+        {!isAnon && (
+          <div className="flex items-center justify-between rounded-xl border border-border/60 bg-card/60 px-4 py-3">
+            <div>
+              <p className="text-sm font-medium">Public</p>
+              <p className="text-xs text-muted-foreground">
+                Show this image in the public gallery.
+              </p>
+            </div>
+            <Switch checked={isPublic} onCheckedChange={setIsPublic} />
+          </div>
+        )}
 
         {busy && <Progress value={progress} />}
 

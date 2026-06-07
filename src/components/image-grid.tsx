@@ -1,36 +1,48 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { attachUrls, formatBytes, type ImageWithUrl } from "@/lib/images";
+import { attachUrls, formatBytes, type ImageRow, type ImageWithUrl } from "@/lib/images";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EyeOff } from "lucide-react";
 
 type Props = {
-  scope: "public" | "mine";
+  scope: "public" | "mine" | "all" | "hidden";
   userId?: string;
+  search?: string;
+  tags?: string[];
   emptyHint?: React.ReactNode;
+  refreshKey?: number;
 };
 
-export function ImageGrid({ scope, userId, emptyHint }: Props) {
+export function ImageGrid({ scope, userId, search, tags, emptyHint, refreshKey }: Props) {
   const [items, setItems] = useState<ImageWithUrl[] | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      let q = supabase.from("images").select("*").order("created_at", { ascending: false }).limit(60);
-      if (scope === "public") q = q.eq("is_public", true);
+      setItems(null);
+      let q = supabase
+        .from("images")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(80);
+      if (scope === "public") q = q.eq("is_public", true).eq("is_hidden", false);
       if (scope === "mine" && userId) q = q.eq("user_id", userId);
+      if (scope === "hidden") q = q.eq("is_hidden", true);
+      if (search && search.trim()) q = q.ilike("title", `%${search.trim()}%`);
+      if (tags && tags.length) q = q.contains("tags", tags);
       const { data, error } = await q;
       if (error || !data) {
         if (!cancelled) setItems([]);
         return;
       }
-      const withUrls = await attachUrls(data);
+      const withUrls = await attachUrls(data as ImageRow[]);
       if (!cancelled) setItems(withUrls);
     })();
     return () => {
       cancelled = true;
     };
-  }, [scope, userId]);
+  }, [scope, userId, search, JSON.stringify(tags), refreshKey]);
 
   if (items === null) {
     return (
@@ -67,6 +79,11 @@ export function ImageGrid({ scope, userId, emptyHint }: Props) {
               className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
             />
           </div>
+          {img.is_hidden && (
+            <div className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-md bg-destructive/90 px-2 py-0.5 text-[10px] font-medium text-destructive-foreground">
+              <EyeOff className="h-3 w-3" /> hidden
+            </div>
+          )}
           <div className="absolute inset-x-0 bottom-0 translate-y-2 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-3 opacity-0 transition-all group-hover:translate-y-0 group-hover:opacity-100">
             <p className="truncate text-xs font-medium text-white">
               {img.title ?? "Untitled"}

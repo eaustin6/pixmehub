@@ -108,6 +108,9 @@ function RootComponent() {
         <main className="flex-1">
           <Outlet />
         </main>
+        <footer className="border-t border-border/60 bg-background/50 py-6 text-center text-xs text-muted-foreground">
+          Built with <span className="text-red-500">❤</span> by Niaz Nafis
+        </footer>
       </div>
       <Toaster />
     </QueryClientProvider>
