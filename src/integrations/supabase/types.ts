@@ -26,8 +26,10 @@ export type Database = {
           is_public: boolean
           mime_type: string | null
           size_bytes: number | null
-          storage_path: string
+          storage_path: string | null
           tags: string[]
+          telegram_file_id: string | null
+          telegram_message_id: number | null
           title: string | null
           user_id: string | null
           width: number | null
@@ -43,8 +45,10 @@ export type Database = {
           is_public?: boolean
           mime_type?: string | null
           size_bytes?: number | null
-          storage_path: string
+          storage_path?: string | null
           tags?: string[]
+          telegram_file_id?: string | null
+          telegram_message_id?: number | null
           title?: string | null
           user_id?: string | null
           width?: number | null
@@ -60,8 +64,10 @@ export type Database = {
           is_public?: boolean
           mime_type?: string | null
           size_bytes?: number | null
-          storage_path?: string
+          storage_path?: string | null
           tags?: string[]
+          telegram_file_id?: string | null
+          telegram_message_id?: number | null
           title?: string | null
           user_id?: string | null
           width?: number | null
