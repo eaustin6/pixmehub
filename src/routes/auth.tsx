@@ -28,10 +28,15 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
+function isSafeRedirect(url: string | undefined): url is string {
+  return !!url && url.startsWith("/") && !url.startsWith("//");
+}
+
 function AuthPage() {
   const navigate = useNavigate();
   const router = useRouter();
-  const { redirect } = useSearch({ from: "/auth" });
+  const { redirect: rawRedirect } = useSearch({ from: "/auth" });
+  const redirect = isSafeRedirect(rawRedirect) ? rawRedirect : "/";
   const [tab, setTab] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
