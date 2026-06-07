@@ -44,8 +44,8 @@ export const Route = createFileRoute("/api/public/tg-upload")({
         const title = ((form.get("title") as string | null) ?? "").slice(0, 200) || null;
         const tagsRaw = (form.get("tags") as string | null) ?? "[]";
         const isPublic = userId ? (form.get("is_public") as string | null) === "true" : true;
-        const albumId = userId ? (((form.get("album_id") as string | null) || "").trim() || null) : null;
-        const albumTitle = userId ? (((form.get("album_title") as string | null) || "").trim() || null) : null;
+        const albumId = ((form.get("album_id") as string | null) || "").trim() || null;
+        const albumTitle = ((form.get("album_title") as string | null) || "").trim() || null;
         const widthRaw = Number(form.get("width"));
         const heightRaw = Number(form.get("height"));
         const width = Number.isFinite(widthRaw) && widthRaw > 0 ? widthRaw : null;
