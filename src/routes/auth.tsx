@@ -10,7 +10,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
-const searchSchema = z.object({ redirect: z.string().optional() });
+const searchSchema = z.object({
+  redirect: z
+    .string()
+    .regex(/^\/[^/]/, "must be a relative path")
+    .optional(),
+});
 
 export const Route = createFileRoute("/auth")({
   validateSearch: searchSchema,
@@ -23,10 +28,15 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
+function isSafeRedirect(url: string | undefined): url is string {
+  return !!url && url.startsWith("/") && !url.startsWith("//");
+}
+
 function AuthPage() {
   const navigate = useNavigate();
   const router = useRouter();
-  const { redirect } = useSearch({ from: "/auth" });
+  const { redirect: rawRedirect } = useSearch({ from: "/auth" });
+  const redirect = isSafeRedirect(rawRedirect) ? rawRedirect : "/";
   const [tab, setTab] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -50,7 +60,7 @@ function AuthPage() {
         toast.success("Account created — check your email to confirm.");
       }
       router.invalidate();
-      navigate({ to: redirect ?? "/" });
+      navigate({ to: redirect });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Authentication failed");
     } finally {
@@ -70,7 +80,7 @@ function AuthPage() {
       }
       if (result.redirected) return;
       router.invalidate();
-      navigate({ to: redirect ?? "/" });
+      navigate({ to: redirect });
     } finally {
       setBusy(false);
     }
