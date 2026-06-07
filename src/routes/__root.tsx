@@ -13,7 +13,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { SiteHeader } from "@/components/site-header";
 import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
-import bgSky from "@/assets/bg-sky.jpeg.asset.json";
+
 
 function NotFoundComponent() {
   return (
@@ -111,12 +111,6 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <div
-        aria-hidden
-        className="pointer-events-none fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(${bgSky.url})` }}
-      />
-      <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 bg-background/70 backdrop-blur-[2px]" />
       <div className="flex min-h-screen flex-col">
         <SiteHeader />
         <main className="flex-1">
