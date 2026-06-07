@@ -3,7 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 export type ImageRow = {
   id: string;
   user_id: string | null;
-  storage_path: string;
+  storage_path: string | null;
+  telegram_file_id: string | null;
+  telegram_message_id: number | null;
   title: string | null;
   width: number | null;
   height: number | null;
@@ -22,6 +24,11 @@ export type ImageWithUrl = ImageRow & { url: string };
 
 const SIGNED_TTL = 60 * 60;
 
+export function imageUrlFor(row: Pick<ImageRow, "id" | "telegram_file_id" | "storage_path">): string | null {
+  if (row.telegram_file_id) return `/api/public/tg-image/${row.id}`;
+  return null;
+}
+
 export async function signImage(path: string): Promise<string> {
   const { data, error } = await supabase.storage
     .from("images")
@@ -31,12 +38,24 @@ export async function signImage(path: string): Promise<string> {
 }
 
 export async function attachUrls(rows: ImageRow[]): Promise<ImageWithUrl[]> {
-  const urls = await Promise.all(
-    rows.map((r) =>
-      supabase.storage.from("images").createSignedUrl(r.storage_path, SIGNED_TTL),
-    ),
-  );
-  return rows.map((r, i) => ({ ...r, url: urls[i]?.data?.signedUrl ?? "" }));
+  const out: ImageWithUrl[] = [];
+  for (const r of rows) {
+    let url = "";
+    if (r.telegram_file_id) {
+      url = `/api/public/tg-image/${r.id}`;
+    } else if (r.storage_path) {
+      try {
+        const { data } = await supabase.storage
+          .from("images")
+          .createSignedUrl(r.storage_path, SIGNED_TTL);
+        url = data?.signedUrl ?? "";
+      } catch {
+        /* ignore */
+      }
+    }
+    out.push({ ...r, url });
+  }
+  return out;
 }
 
 export function formatBytes(n: number | null): string {

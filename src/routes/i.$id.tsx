@@ -31,10 +31,15 @@ function ImageDetail() {
         setRow("missing");
         return;
       }
-      setRow(data as ImageRow);
+      const r = data as ImageRow;
+      setRow(r);
       try {
-        const u = await signImage(data.storage_path);
-        if (!cancelled) setUrl(u);
+        if (r.telegram_file_id) {
+          setUrl(`/api/public/tg-image/${r.id}`);
+        } else if (r.storage_path) {
+          const u = await signImage(r.storage_path);
+          if (!cancelled) setUrl(u);
+        }
       } catch {
         /* noop */
       }
@@ -73,7 +78,9 @@ function ImageDetail() {
   async function onDelete() {
     if (!row || row === "missing") return;
     if (!confirm("Delete this image? This cannot be undone.")) return;
-    await supabase.storage.from("images").remove([row.storage_path]);
+    if (row.storage_path) {
+      await supabase.storage.from("images").remove([row.storage_path]);
+    }
     const { error } = await supabase.from("images").delete().eq("id", row.id);
     if (error) {
       toast.error(error.message);

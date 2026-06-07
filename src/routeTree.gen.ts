@@ -17,6 +17,8 @@ import { Route as IIdRouteImport } from './routes/i.$id'
 import { Route as AIdRouteImport } from './routes/a.$id'
 import { Route as AuthenticatedMyRouteImport } from './routes/_authenticated/my'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as ApiPublicTgUploadRouteImport } from './routes/api/public/tg-upload'
+import { Route as ApiPublicTgImageIdRouteImport } from './routes/api/public/tg-image.$id'
 
 const UploadRoute = UploadRouteImport.update({
   id: '/upload',
@@ -57,6 +59,16 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicTgUploadRoute = ApiPublicTgUploadRouteImport.update({
+  id: '/api/public/tg-upload',
+  path: '/api/public/tg-upload',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicTgImageIdRoute = ApiPublicTgImageIdRouteImport.update({
+  id: '/api/public/tg-image/$id',
+  path: '/api/public/tg-image/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -66,6 +78,8 @@ export interface FileRoutesByFullPath {
   '/my': typeof AuthenticatedMyRoute
   '/a/$id': typeof AIdRoute
   '/i/$id': typeof IIdRoute
+  '/api/public/tg-upload': typeof ApiPublicTgUploadRoute
+  '/api/public/tg-image/$id': typeof ApiPublicTgImageIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -75,6 +89,8 @@ export interface FileRoutesByTo {
   '/my': typeof AuthenticatedMyRoute
   '/a/$id': typeof AIdRoute
   '/i/$id': typeof IIdRoute
+  '/api/public/tg-upload': typeof ApiPublicTgUploadRoute
+  '/api/public/tg-image/$id': typeof ApiPublicTgImageIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -86,12 +102,32 @@ export interface FileRoutesById {
   '/_authenticated/my': typeof AuthenticatedMyRoute
   '/a/$id': typeof AIdRoute
   '/i/$id': typeof IIdRoute
+  '/api/public/tg-upload': typeof ApiPublicTgUploadRoute
+  '/api/public/tg-image/$id': typeof ApiPublicTgImageIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/upload' | '/admin' | '/my' | '/a/$id' | '/i/$id'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/upload'
+    | '/admin'
+    | '/my'
+    | '/a/$id'
+    | '/i/$id'
+    | '/api/public/tg-upload'
+    | '/api/public/tg-image/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/upload' | '/admin' | '/my' | '/a/$id' | '/i/$id'
+  to:
+    | '/'
+    | '/auth'
+    | '/upload'
+    | '/admin'
+    | '/my'
+    | '/a/$id'
+    | '/i/$id'
+    | '/api/public/tg-upload'
+    | '/api/public/tg-image/$id'
   id:
     | '__root__'
     | '/'
@@ -102,6 +138,8 @@ export interface FileRouteTypes {
     | '/_authenticated/my'
     | '/a/$id'
     | '/i/$id'
+    | '/api/public/tg-upload'
+    | '/api/public/tg-image/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -111,6 +149,8 @@ export interface RootRouteChildren {
   UploadRoute: typeof UploadRoute
   AIdRoute: typeof AIdRoute
   IIdRoute: typeof IIdRoute
+  ApiPublicTgUploadRoute: typeof ApiPublicTgUploadRoute
+  ApiPublicTgImageIdRoute: typeof ApiPublicTgImageIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -171,6 +211,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/tg-upload': {
+      id: '/api/public/tg-upload'
+      path: '/api/public/tg-upload'
+      fullPath: '/api/public/tg-upload'
+      preLoaderRoute: typeof ApiPublicTgUploadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/tg-image/$id': {
+      id: '/api/public/tg-image/$id'
+      path: '/api/public/tg-image/$id'
+      fullPath: '/api/public/tg-image/$id'
+      preLoaderRoute: typeof ApiPublicTgImageIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -194,17 +248,9 @@ const rootRouteChildren: RootRouteChildren = {
   UploadRoute: UploadRoute,
   AIdRoute: AIdRoute,
   IIdRoute: IIdRoute,
+  ApiPublicTgUploadRoute: ApiPublicTgUploadRoute,
+  ApiPublicTgImageIdRoute: ApiPublicTgImageIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
