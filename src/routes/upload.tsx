@@ -7,14 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { parseTags, resizeImage } from "@/lib/images";
+import { parseTags } from "@/lib/images";
 import { toast } from "sonner";
 import { ImagePlus, Loader2, X, Images as ImagesIcon } from "lucide-react";
 
@@ -27,13 +20,6 @@ const ACCEPT = "image/png,image/jpeg,image/webp,image/gif,image/avif";
 const MAX_BYTES = 50 * 1024 * 1024;
 const MAX_FILES = 30;
 
-const RESIZE_OPTS = [
-  { label: "Original (no resize)", value: "0" },
-  { label: "Large (2048px)", value: "2048" },
-  { label: "Medium (1280px)", value: "1280" },
-  { label: "Small (800px)", value: "800" },
-];
-
 type Picked = { file: File; preview: string; title: string };
 
 function UploadPage() {
@@ -43,7 +29,6 @@ function UploadPage() {
   const [items, setItems] = useState<Picked[]>([]);
   const [albumTitle, setAlbumTitle] = useState("");
   const [tagsInput, setTagsInput] = useState("");
-  const [maxDim, setMaxDim] = useState("2048");
   const [isPublic, setIsPublic] = useState(true);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -139,11 +124,10 @@ function UploadPage() {
     try {
       for (let i = 0; i < items.length; i++) {
         const it = items[i];
-        const processed = await resizeImage(it.file, Number(maxDim));
-        const dims = await getDimensions(processed);
+        const dims = await getDimensions(it.file);
 
         const fd = new FormData();
-        fd.append("file", processed, processed.name);
+        fd.append("file", it.file, it.file.name);
         fd.append("title", it.title || "");
         fd.append("tags", JSON.stringify(tags));
         fd.append("is_public", String(isPublic));
@@ -290,22 +274,6 @@ function UploadPage() {
           <p className="text-xs text-muted-foreground">
             Comma or space separated · up to 12 tags
           </p>
-        </div>
-
-        <div className="space-y-1.5">
-          <Label>Resize</Label>
-          <Select value={maxDim} onValueChange={setMaxDim}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {RESIZE_OPTS.map((o) => (
-                <SelectItem key={o.value} value={o.value}>
-                  {o.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
 
         {!isAnon && (
