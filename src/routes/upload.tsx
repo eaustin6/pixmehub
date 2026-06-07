@@ -24,7 +24,7 @@ export const Route = createFileRoute("/upload")({
 });
 
 const ACCEPT = "image/png,image/jpeg,image/webp,image/gif,image/avif";
-const MAX_BYTES = 15 * 1024 * 1024;
+const MAX_BYTES = 50 * 1024 * 1024;
 const MAX_FILES = 30;
 
 const RESIZE_OPTS = [
@@ -61,7 +61,7 @@ function UploadPage() {
         continue;
       }
       if (f.size > MAX_BYTES) {
-        toast.error(`${f.name}: larger than 15 MB`);
+        toast.error(`${f.name}: larger than 50 MB`);
         continue;
       }
       next.push({
@@ -116,51 +116,62 @@ function UploadPage() {
 
   async function onUpload() {
     if (items.length === 0) return;
-    if (isAnon && !isPublic) {
-      toast.error("Anonymous uploads must be public");
+    if (isAnon) {
+      toast.error("Please sign in to upload");
       return;
     }
     setBusy(true);
     setProgress(2);
 
+    const { data: sess } = await supabase.auth.getSession();
+    const bearer = sess.session?.access_token;
+    if (!bearer) {
+      toast.error("Session expired — sign in again");
+      setBusy(false);
+      return;
+    }
+
     const album_id = isAlbum ? crypto.randomUUID() : null;
     const album_title = isAlbum ? albumTitle.trim() || "Untitled album" : null;
     const tags = parseTags(tagsInput);
-    const folder = user ? user.id : "anon";
 
     const insertedIds: string[] = [];
     try {
       for (let i = 0; i < items.length; i++) {
         const it = items[i];
         const processed = await resizeImage(it.file, Number(maxDim));
-        const ext = processed.name.split(".").pop() ?? "bin";
-        const path = `${folder}/${crypto.randomUUID()}.${ext}`;
         const dims = await getDimensions(processed);
 
-        const { error: upErr } = await supabase.storage
-          .from("images")
-          .upload(path, processed, { contentType: processed.type, upsert: false });
-        if (upErr) throw upErr;
+        const fd = new FormData();
+        fd.append("file", processed, processed.name);
+        fd.append("title", it.title || "");
+        fd.append("tags", JSON.stringify(tags));
+        fd.append("is_public", String(isPublic));
+        if (album_id) fd.append("album_id", album_id);
+        if (album_title) fd.append("album_title", album_title);
+        if (dims) {
+          fd.append("width", String(dims.w));
+          fd.append("height", String(dims.h));
+        }
 
-        const { data: row, error: insErr } = await supabase
-          .from("images")
-          .insert({
-            user_id: user?.id ?? null,
-            storage_path: path,
-            title: it.title || null,
-            width: dims?.w ?? null,
-            height: dims?.h ?? null,
-            size_bytes: processed.size,
-            mime_type: processed.type,
-            is_public: isAnon ? true : isPublic,
-            tags,
-            album_id,
-            album_title,
-          })
-          .select("id")
-          .single();
-        if (insErr) throw insErr;
-        insertedIds.push(row.id);
+        const res = await fetch("/api/public/tg-upload", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${bearer}` },
+          body: fd,
+        });
+        if (!res.ok) {
+          const txt = await res.text().catch(() => "");
+          let msg = txt;
+          try {
+            const j = JSON.parse(txt);
+            msg = j.error ?? txt;
+          } catch {
+            /* ignore */
+          }
+          throw new Error(msg || `Upload failed (${res.status})`);
+        }
+        const json = (await res.json()) as { id: string };
+        insertedIds.push(json.id);
         setProgress(Math.round(((i + 1) / items.length) * 100));
       }
 
@@ -183,9 +194,9 @@ function UploadPage() {
         Upload {isAlbum ? "an album" : "images"}
       </h1>
       <p className="mt-1 text-sm text-muted-foreground">
-        JPG, PNG, WebP, GIF, or AVIF · up to 15 MB each · up to {MAX_FILES} files.
-        Pick multiple files to create an album.
-        {isAnon && " You're uploading anonymously — images will be public."}
+        JPG, PNG, WebP, GIF, or AVIF · up to 50 MB each · up to {MAX_FILES} files.
+        Files are stored in a private Telegram channel — unlimited capacity.
+        {isAnon && " Please sign in to upload."}
       </p>
 
       <div className="mt-6 space-y-4">
