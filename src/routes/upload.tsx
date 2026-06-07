@@ -196,7 +196,6 @@ function UploadPage() {
       <p className="mt-1 text-sm text-muted-foreground">
         JPG, PNG, WebP, GIF, or AVIF · up to 50 MB each · up to {MAX_FILES} files.
         Files are stored in a private Telegram channel — unlimited capacity.
-        {isAnon && " Please sign in to upload."}
       </p>
 
       <div className="mt-6 space-y-4">
