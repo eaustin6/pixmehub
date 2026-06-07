@@ -143,53 +143,107 @@ git push -u origin main
 
 ---
 
-## Deploying to Vercel
+## Deploying to Vercel (frontend only)
 
-TanStack Start outputs both a static client and a Node server bundle, so the
-project must deploy as a **Node.js** app (not a static site).
+> **Architecture**: Vercel hosts the **frontend (static client bundle) only**.
+> All backend pieces — server functions, `/api/public/*` API routes, database,
+> auth, storage, and the Telegram upload proxy — stay on **Lovable Cloud**.
+> Vercel never runs Node server code for this app; the browser calls the
+> Lovable backend directly.
+>
+> Why split it this way?
+> - Vercel gives you a fast global CDN + custom domains for static assets.
+> - Lovable Cloud already runs the Worker-based server functions, the
+>   Supabase project (auth + Postgres + storage), and the Telegram bot proxy.
+>   Replicating that on Vercel would mean re-provisioning everything.
+> - One source of truth for secrets (`TELEGRAM_BOT_TOKEN`,
+>   `SUPABASE_SERVICE_ROLE_KEY`, …) — they live on Lovable, never on Vercel.
 
-### 1. Import the repo
+### 1. Publish the backend on Lovable first
+
+In the Lovable editor, click **Publish**. You get a stable backend URL like:
+
+```
+https://pixmehub.lovable.app                 # production
+https://project--<project-id>-dev.lovable.app  # preview
+```
+
+Note this URL — the Vercel frontend will call it for every API request.
+
+### 2. Import the repo on Vercel as a static site
 
 1. Go to <https://vercel.com/new> and **Import** the GitHub repo.
-2. **Framework Preset**: `Other`.
-3. **Build Command**: `bun run build` (or `npm run build`).
-4. **Install Command**: `bun install` (or `npm install`).
-5. **Output Directory**: leave default.
+2. **Framework Preset**: `Vite`.
+3. **Build Command**: `bun run build:client` (or `npm run build:client`) — this
+   builds only the client bundle, no Node server.
+4. **Output Directory**: `dist/client`.
+5. **Install Command**: `bun install` (or `npm install`).
 
-### 2. Add environment variables
+> If your `package.json` does not yet have a `build:client` script, add:
+> `"build:client": "vite build"` — this skips the TanStack Start server bundle
+> and only emits the static client into `dist/client`.
 
-In **Project Settings → Environment Variables**, add every variable from
-your `.env`, scoped to **Production**, **Preview**, and **Development**:
+### 3. Add ONLY the public env vars on Vercel
 
-| Name | Scope |
-| --- | --- |
-| `VITE_SUPABASE_URL` | all envs |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` | all envs |
-| `VITE_SUPABASE_PROJECT_ID` | all envs |
-| `SUPABASE_URL` | all envs |
-| `SUPABASE_PUBLISHABLE_KEY` | all envs |
-| `SUPABASE_SERVICE_ROLE_KEY` | all envs (**Secret**) |
+Vercel only needs the browser-visible variables plus the Lovable backend URL:
 
-### 3. Update Supabase Auth redirects
+| Name | Value | Scope |
+| --- | --- | --- |
+| `VITE_SUPABASE_URL` | your Supabase URL | all envs |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | publishable (anon) key | all envs |
+| `VITE_SUPABASE_PROJECT_ID` | project ref | all envs |
+| `VITE_API_BASE_URL` | `https://pixmehub.lovable.app` (your Lovable URL) | all envs |
+
+**Do NOT** add `SUPABASE_SERVICE_ROLE_KEY`, `TELEGRAM_BOT_TOKEN`, or any
+other server secret to Vercel — those stay on Lovable.
+
+### 4. Point the client at the Lovable backend
+
+In `src/lib/api.ts` (create if missing), build absolute URLs against
+`VITE_API_BASE_URL`:
+
+```ts
+const BASE = import.meta.env.VITE_API_BASE_URL ?? "";
+export const apiUrl = (path: string) =>
+  `${BASE}${path.startsWith("/") ? path : `/${path}`}`;
+```
+
+Then use `apiUrl("/api/public/tg-upload")` everywhere instead of a bare
+`/api/public/tg-upload`. The Lovable `/api/public/*` routes already allow
+cross-origin calls.
+
+### 5. Allow the Vercel origin in Supabase Auth
 
 In Supabase → **Authentication → URL Configuration**:
 
 - **Site URL**: `https://<your-app>.vercel.app`
 - **Additional redirect URLs**:
   - `https://<your-app>.vercel.app/**`
-  - `https://*-<team>.vercel.app/**` (for preview deployments)
+  - `https://*-<team>.vercel.app/**` (preview deployments)
+  - `https://pixmehub.lovable.app/**` (keep Lovable working too)
 
-### 4. Deploy
+### 6. Deploy
 
-Click **Deploy**. After the first deploy:
+Click **Deploy** on Vercel. After the first deploy:
 
-- Pushes to `main` → production
-- Pull requests → preview deployments at unique URLs
+- Pushes to `main` → production frontend on Vercel
+- Pull requests → Vercel preview deployments
+- Every preview/production frontend talks to the **same** Lovable backend
 
-### 5. (Optional) Custom domain
+### 7. (Optional) Custom domain
 
-**Project → Settings → Domains → Add**, follow the DNS instructions, then add
-the new domain to Supabase Auth redirects too.
+Add the custom domain in **Vercel → Project → Settings → Domains**, then
+add it to the Supabase Auth redirect allow-list (step 5).
+
+### What stays on Lovable
+
+- All `createServerFn` handlers (backup/restore, admin actions, etc.)
+- `src/routes/api/public/tg-upload.ts` and any other `/api/*` route file
+- Supabase project (auth, Postgres, RLS, storage `images` bucket)
+- Secrets: `TELEGRAM_BOT_TOKEN`, `SUPABASE_SERVICE_ROLE_KEY`,
+  `LOVABLE_API_KEY`
+- Edge logs and the `cloud_status` health endpoint
+
 
 ---
 

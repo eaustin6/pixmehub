@@ -16,6 +16,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as IIdRouteImport } from './routes/i.$id'
 import { Route as AIdRouteImport } from './routes/a.$id'
 import { Route as AuthenticatedMyRouteImport } from './routes/_authenticated/my'
+import { Route as AuthenticatedAlbumsRouteImport } from './routes/_authenticated/albums'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as ApiPublicTgUploadRouteImport } from './routes/api/public/tg-upload'
 import { Route as ApiPublicTgImageIdRouteImport } from './routes/api/public/tg-image.$id'
@@ -54,6 +55,11 @@ const AuthenticatedMyRoute = AuthenticatedMyRouteImport.update({
   path: '/my',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAlbumsRoute = AuthenticatedAlbumsRouteImport.update({
+  id: '/albums',
+  path: '/albums',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -75,6 +81,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/upload': typeof UploadRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/albums': typeof AuthenticatedAlbumsRoute
   '/my': typeof AuthenticatedMyRoute
   '/a/$id': typeof AIdRoute
   '/i/$id': typeof IIdRoute
@@ -86,6 +93,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/upload': typeof UploadRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/albums': typeof AuthenticatedAlbumsRoute
   '/my': typeof AuthenticatedMyRoute
   '/a/$id': typeof AIdRoute
   '/i/$id': typeof IIdRoute
@@ -99,6 +107,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/upload': typeof UploadRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/albums': typeof AuthenticatedAlbumsRoute
   '/_authenticated/my': typeof AuthenticatedMyRoute
   '/a/$id': typeof AIdRoute
   '/i/$id': typeof IIdRoute
@@ -112,6 +121,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/upload'
     | '/admin'
+    | '/albums'
     | '/my'
     | '/a/$id'
     | '/i/$id'
@@ -123,6 +133,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/upload'
     | '/admin'
+    | '/albums'
     | '/my'
     | '/a/$id'
     | '/i/$id'
@@ -135,6 +146,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/upload'
     | '/_authenticated/admin'
+    | '/_authenticated/albums'
     | '/_authenticated/my'
     | '/a/$id'
     | '/i/$id'
@@ -204,6 +216,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMyRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/albums': {
+      id: '/_authenticated/albums'
+      path: '/albums'
+      fullPath: '/albums'
+      preLoaderRoute: typeof AuthenticatedAlbumsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin': {
       id: '/_authenticated/admin'
       path: '/admin'
@@ -230,11 +249,13 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedAlbumsRoute: typeof AuthenticatedAlbumsRoute
   AuthenticatedMyRoute: typeof AuthenticatedMyRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedAlbumsRoute: AuthenticatedAlbumsRoute,
   AuthenticatedMyRoute: AuthenticatedMyRoute,
 }
 
@@ -254,13 +275,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
