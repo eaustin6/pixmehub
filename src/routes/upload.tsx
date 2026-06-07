@@ -156,7 +156,7 @@ function UploadPage() {
 
         const res = await fetch("/api/public/tg-upload", {
           method: "POST",
-          headers: { Authorization: `Bearer ${bearer}` },
+          headers: bearer ? { Authorization: `Bearer ${bearer}` } : undefined,
           body: fd,
         });
         if (!res.ok) {
