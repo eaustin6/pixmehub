@@ -1,10 +1,6 @@
-import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ImageGrid } from "@/components/image-grid";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Upload, Search, X } from "lucide-react";
-import { parseTags } from "@/lib/images";
+import { Upload, Images } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
