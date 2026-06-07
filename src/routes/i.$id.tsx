@@ -172,6 +172,10 @@ function ImageDetail() {
             <Copy className="h-4 w-4" />
             Copy link
           </Button>
+          <Button onClick={onDownload} disabled={!url}>
+            <Download className="h-4 w-4" />
+            Download
+          </Button>
           {isSuperAdmin && (
             <Button variant="secondary" onClick={toggleHidden}>
               {row.is_hidden ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
