@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { attachUrls, type ImageRow, type ImageWithUrl } from "@/lib/images";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Copy } from "lucide-react";
+import { Copy, Download } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/a/$id")({
