@@ -10,7 +10,7 @@ import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { ImagePlus, Loader2, X } from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/upload")({
+export const Route = createFileRoute("/upload")({
   head: () => ({ meta: [{ title: "Upload — Lumen" }] }),
   component: UploadPage,
 });
