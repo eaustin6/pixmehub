@@ -67,14 +67,19 @@ export const Route = createFileRoute("/api/public/telegram/webhook")({
           return new Response("Unauthorized", { status: 401 });
         }
 
-        const update = (await request.json()) as Record<string, unknown>;
-        const message = (update.message ?? update.edited_message) as Record<string, unknown> | undefined;
+        type TgMessage = { chat: { id: number }; text?: string };
+        const update = (await request.json()) as {
+          update_id: number;
+          message?: TgMessage;
+          edited_message?: TgMessage;
+        };
+        const message = update.message ?? update.edited_message;
         if (!message?.chat?.id || typeof update.update_id !== "number") {
           return Response.json({ ok: true, ignored: true });
         }
 
         const text = String(message.text ?? "");
-        const chatId = Number((message.chat as Record<string, unknown>).id);
+        const chatId = message.chat.id;
 
         if (text.trim().toLowerCase() === "/start") {
           await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
