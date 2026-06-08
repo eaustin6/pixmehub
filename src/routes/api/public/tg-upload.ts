@@ -3,15 +3,27 @@ import { createFileRoute } from "@tanstack/react-router";
 // Private Telegram channel that backs image storage. Bot must be admin with "Post messages".
 const CHANNEL_ID = "-1002192228589";
 const MAX_BYTES = 50 * 1024 * 1024;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const ALLOWED_MIME = new Set([
+  "image/png",
+  "image/jpeg",
+  "image/jpg",
+  "image/webp",
+  "image/gif",
+  "image/avif",
+]);
+const ALLOWED_ORIGIN_RE = /^https:\/\/([a-z0-9-]+\.)*lovable\.app$/i;
 
 function corsHeaders(origin: string | null) {
+  // Allow same-origin/lovable.app subdomains; fall back to no CORS (same-origin only).
+  const allow = origin && ALLOWED_ORIGIN_RE.test(origin) ? origin : "";
   return {
-    "Access-Control-Allow-Origin": origin ?? "*",
+    ...(allow ? { "Access-Control-Allow-Origin": allow } : {}),
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, Accept, Origin",
     "Access-Control-Max-Age": "86400",
     Vary: "Origin",
-  } as const;
+  } as Record<string, string>;
 }
 
 function jsonWithCors(request: Request, body: unknown, init?: ResponseInit) {
