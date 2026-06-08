@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
+import { apiUrl } from "@/lib/api";
 import { signImage, formatBytes, type ImageRow } from "@/lib/images";
 import { useAuth } from "@/hooks/use-auth";
 import { useIsSuperAdmin } from "@/hooks/use-role";
@@ -35,7 +36,7 @@ function ImageDetail() {
       setRow(r);
       try {
         if (r.telegram_file_id) {
-          setUrl(`/api/public/tg-image/${r.id}`);
+          setUrl(apiUrl(`/api/public/tg-image/${r.id}`));
         } else if (r.storage_path) {
           const u = await signImage(r.storage_path);
           if (!cancelled) setUrl(u);
