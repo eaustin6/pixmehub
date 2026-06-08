@@ -12,13 +12,9 @@ const ALLOWED_MIME = new Set([
   "image/gif",
   "image/avif",
 ]);
-const ALLOWED_ORIGIN_RE = /^https:\/\/([a-z0-9-]+\.)*lovable\.app$/i;
-
 function corsHeaders(origin: string | null) {
-  // Allow same-origin/lovable.app subdomains; fall back to no CORS (same-origin only).
-  const allow = origin && ALLOWED_ORIGIN_RE.test(origin) ? origin : "";
   return {
-    ...(allow ? { "Access-Control-Allow-Origin": allow } : {}),
+    "Access-Control-Allow-Origin": origin ?? "*",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, Accept, Origin",
     "Access-Control-Max-Age": "86400",
