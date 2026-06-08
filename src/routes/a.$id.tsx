@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
 import { attachUrls, type ImageRow, type ImageWithUrl } from "@/lib/images";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Copy, Download } from "lucide-react";
+import { Copy, Download, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/a/$id")({
@@ -14,8 +15,10 @@ export const Route = createFileRoute("/a/$id")({
 
 function AlbumPage() {
   const { id } = Route.useParams();
+  const { user } = useAuth();
   const [items, setItems] = useState<ImageWithUrl[] | null>(null);
   const [title, setTitle] = useState<string | null>(null);
+  const [ownerId, setOwnerId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -28,6 +31,7 @@ function AlbumPage() {
       if (cancelled) return;
       const rows = (data ?? []) as ImageRow[];
       setTitle(rows[0]?.album_title ?? "Album");
+      setOwnerId(rows[0]?.user_id ?? null);
       const withUrls = await attachUrls(rows);
       if (!cancelled) setItems(withUrls);
     })();
@@ -104,6 +108,14 @@ function AlbumPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          {user && ownerId === user.id && (
+            <Button variant="secondary" asChild>
+              <Link to="/upload" search={{ album: id }}>
+                <Plus className="h-4 w-4" />
+                Add photos
+              </Link>
+            </Button>
+          )}
           <Button variant="secondary" onClick={copyLink}>
             <Copy className="h-4 w-4" />
             Copy album link
