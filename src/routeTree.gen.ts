@@ -20,6 +20,7 @@ import { Route as AuthenticatedAlbumsRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as ApiPublicTgUploadRouteImport } from './routes/api/public/tg-upload'
 import { Route as ApiPublicTgImageIdRouteImport } from './routes/api/public/tg-image.$id'
+import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api/public/telegram/webhook'
 
 const UploadRoute = UploadRouteImport.update({
   id: '/upload',
@@ -75,6 +76,12 @@ const ApiPublicTgImageIdRoute = ApiPublicTgImageIdRouteImport.update({
   path: '/api/public/tg-image/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicTelegramWebhookRoute =
+  ApiPublicTelegramWebhookRouteImport.update({
+    id: '/api/public/telegram/webhook',
+    path: '/api/public/telegram/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -86,6 +93,7 @@ export interface FileRoutesByFullPath {
   '/a/$id': typeof AIdRoute
   '/i/$id': typeof IIdRoute
   '/api/public/tg-upload': typeof ApiPublicTgUploadRoute
+  '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
   '/api/public/tg-image/$id': typeof ApiPublicTgImageIdRoute
 }
 export interface FileRoutesByTo {
@@ -98,6 +106,7 @@ export interface FileRoutesByTo {
   '/a/$id': typeof AIdRoute
   '/i/$id': typeof IIdRoute
   '/api/public/tg-upload': typeof ApiPublicTgUploadRoute
+  '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
   '/api/public/tg-image/$id': typeof ApiPublicTgImageIdRoute
 }
 export interface FileRoutesById {
@@ -112,6 +121,7 @@ export interface FileRoutesById {
   '/a/$id': typeof AIdRoute
   '/i/$id': typeof IIdRoute
   '/api/public/tg-upload': typeof ApiPublicTgUploadRoute
+  '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
   '/api/public/tg-image/$id': typeof ApiPublicTgImageIdRoute
 }
 export interface FileRouteTypes {
@@ -126,6 +136,7 @@ export interface FileRouteTypes {
     | '/a/$id'
     | '/i/$id'
     | '/api/public/tg-upload'
+    | '/api/public/telegram/webhook'
     | '/api/public/tg-image/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -138,6 +149,7 @@ export interface FileRouteTypes {
     | '/a/$id'
     | '/i/$id'
     | '/api/public/tg-upload'
+    | '/api/public/telegram/webhook'
     | '/api/public/tg-image/$id'
   id:
     | '__root__'
@@ -151,6 +163,7 @@ export interface FileRouteTypes {
     | '/a/$id'
     | '/i/$id'
     | '/api/public/tg-upload'
+    | '/api/public/telegram/webhook'
     | '/api/public/tg-image/$id'
   fileRoutesById: FileRoutesById
 }
@@ -162,6 +175,7 @@ export interface RootRouteChildren {
   AIdRoute: typeof AIdRoute
   IIdRoute: typeof IIdRoute
   ApiPublicTgUploadRoute: typeof ApiPublicTgUploadRoute
+  ApiPublicTelegramWebhookRoute: typeof ApiPublicTelegramWebhookRoute
   ApiPublicTgImageIdRoute: typeof ApiPublicTgImageIdRoute
 }
 
@@ -244,6 +258,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicTgImageIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/telegram/webhook': {
+      id: '/api/public/telegram/webhook'
+      path: '/api/public/telegram/webhook'
+      fullPath: '/api/public/telegram/webhook'
+      preLoaderRoute: typeof ApiPublicTelegramWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -270,6 +291,7 @@ const rootRouteChildren: RootRouteChildren = {
   AIdRoute: AIdRoute,
   IIdRoute: IIdRoute,
   ApiPublicTgUploadRoute: ApiPublicTgUploadRoute,
+  ApiPublicTelegramWebhookRoute: ApiPublicTelegramWebhookRoute,
   ApiPublicTgImageIdRoute: ApiPublicTgImageIdRoute,
 }
 export const routeTree = rootRouteImport
