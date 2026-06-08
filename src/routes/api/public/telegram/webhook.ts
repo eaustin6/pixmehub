@@ -13,44 +13,7 @@ function safeEqual(a: string, b: string): boolean {
   return left.length === right.length && timingSafeEqual(left, right);
 }
 
-const START_MESSAGE = `<b>Welcome to Lumen (PixmeHub)</b> — a quiet place for images. 🌙
-
-<b>How uploads work</b>
-• Drop a single photo or up to 15 files at once.
-• Each file can be up to 50 MB.
-• Images are stored in a private Telegram channel, so capacity is unlimited.
-• You get a short shareable link instantly.
-
-<b>Anonymous vs Signed In</b>
-• No account needed — upload anonymously (always public).
-• Sign in with email/password or Google to create private uploads and manage albums.
-
-<b>Albums</b>
-• Multiple files automatically become an album with one link.
-• Signed-in users can add more photos to an existing album later.
-
-<b>Gallery & Sharing</b>
-• Public images appear on the homepage gallery.
-• Private images are visible only to you (or anyone with the direct link).
-• Every image has a detail page with title, tags, dimensions, and file size.
-• One-click download any image or an entire album.
-
-<b>Admin & Moderation</b>
-• A super admin control panel at <code>/admin</code> lets moderators hide, restore, or delete any image.
-• Full JSON backup & restore of the database is built in.
-
-<b>Security</b>
-• Strict file-type allow-list (PNG, JPEG, WEBP, GIF, AVIF only).
-• Input validation on every field (size limits, tag limits, title sanitisation).
-• Row-Level Security (RLS) on the database so users can only touch their own data.
-• Leaked-password protection via Have I Been Pwned.
-
-<b>Tech stack</b>
-• TanStack Start + React 19 + Tailwind v4 + shadcn/ui
-• Supabase (Auth, Postgres, RLS)
-• Telegram Bot API as the storage proxy
-
-Website: https://pixmehub.lovable.app`;
+const START_MESSAGE = `Hi bot is live ❤️`;
 
 export const Route = createFileRoute("/api/public/telegram/webhook")({
   server: {
