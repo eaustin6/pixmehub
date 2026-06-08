@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { apiUrl } from "@/lib/api";
 
 export type ImageRow = {
   id: string;
@@ -25,7 +26,7 @@ export type ImageWithUrl = ImageRow & { url: string };
 const SIGNED_TTL = 60 * 60;
 
 export function imageUrlFor(row: Pick<ImageRow, "id" | "telegram_file_id" | "storage_path">): string | null {
-  if (row.telegram_file_id) return `/api/public/tg-image/${row.id}`;
+  if (row.telegram_file_id) return apiUrl(`/api/public/tg-image/${row.id}`);
   return null;
 }
 
@@ -42,7 +43,7 @@ export async function attachUrls(rows: ImageRow[]): Promise<ImageWithUrl[]> {
   for (const r of rows) {
     let url = "";
     if (r.telegram_file_id) {
-      url = `/api/public/tg-image/${r.id}`;
+      url = apiUrl(`/api/public/tg-image/${r.id}`);
     } else if (r.storage_path) {
       try {
         const { data } = await supabase.storage

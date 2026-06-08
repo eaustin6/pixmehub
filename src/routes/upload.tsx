@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
 import { parseTags } from "@/lib/images";
+import { apiUrl } from "@/lib/api";
 import { toast } from "sonner";
 import { ImagePlus, Loader2, X, Images as ImagesIcon } from "lucide-react";
 
@@ -185,7 +186,7 @@ function UploadPage() {
           fd.append("height", String(dims.h));
         }
 
-        const res = await fetch("/api/public/tg-upload", {
+        const res = await fetch(apiUrl("/api/public/tg-upload"), {
           method: "POST",
           headers: bearer ? { Authorization: `Bearer ${bearer}` } : undefined,
           body: fd,
