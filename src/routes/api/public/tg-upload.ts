@@ -118,6 +118,7 @@ export const Route = createFileRoute("/api/public/tg-upload")({
             user_id: userId,
             telegram_file_id: fileId,
             telegram_message_id: tgJson.result.message_id,
+            bot_index: bot.index,
             storage_path: null,
             title,
             width,
