@@ -15,8 +15,10 @@ export const Route = createFileRoute("/a/$id")({
 
 function AlbumPage() {
   const { id } = Route.useParams();
+  const { user } = useAuth();
   const [items, setItems] = useState<ImageWithUrl[] | null>(null);
   const [title, setTitle] = useState<string | null>(null);
+  const [ownerId, setOwnerId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
