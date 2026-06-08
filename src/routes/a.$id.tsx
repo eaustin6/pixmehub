@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
 import { attachUrls, type ImageRow, type ImageWithUrl } from "@/lib/images";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Copy, Download } from "lucide-react";
+import { Copy, Download, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/a/$id")({
