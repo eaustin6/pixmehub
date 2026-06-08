@@ -4,13 +4,39 @@ import { createFileRoute } from "@tanstack/react-router";
 const CHANNEL_ID = "-1002192228589";
 const MAX_BYTES = 50 * 1024 * 1024;
 
+function corsHeaders(origin: string | null) {
+  return {
+    "Access-Control-Allow-Origin": origin ?? "*",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, Accept, Origin",
+    "Access-Control-Max-Age": "86400",
+    Vary: "Origin",
+  } as const;
+}
+
+function jsonWithCors(request: Request, body: unknown, init?: ResponseInit) {
+  return Response.json(body, {
+    ...init,
+    headers: {
+      ...corsHeaders(request.headers.get("origin")),
+      ...(init?.headers ?? {}),
+    },
+  });
+}
+
 export const Route = createFileRoute("/api/public/tg-upload")({
   server: {
     handlers: {
+      OPTIONS: async ({ request }) => {
+        return new Response(null, {
+          status: 204,
+          headers: corsHeaders(request.headers.get("origin")),
+        });
+      },
       POST: async ({ request }) => {
         const token = process.env.TELEGRAM_BOT_TOKEN;
         if (!token) {
-          return Response.json({ error: "TELEGRAM_BOT_TOKEN not configured" }, { status: 500 });
+          return jsonWithCors(request, { error: "TELEGRAM_BOT_TOKEN not configured" }, { status: 500 });
         }
 
         const auth = request.headers.get("authorization") ?? "";
@@ -27,18 +53,18 @@ export const Route = createFileRoute("/api/public/tg-upload")({
         try {
           form = await request.formData();
         } catch {
-          return Response.json({ error: "Invalid form data" }, { status: 400 });
+          return jsonWithCors(request, { error: "Invalid form data" }, { status: 400 });
         }
 
         const file = form.get("file");
         if (!(file instanceof File)) {
-          return Response.json({ error: "Missing file" }, { status: 400 });
+          return jsonWithCors(request, { error: "Missing file" }, { status: 400 });
         }
         if (file.size === 0) {
-          return Response.json({ error: "Empty file" }, { status: 400 });
+          return jsonWithCors(request, { error: "Empty file" }, { status: 400 });
         }
         if (file.size > MAX_BYTES) {
-          return Response.json({ error: `File exceeds ${MAX_BYTES / 1024 / 1024} MB limit` }, { status: 413 });
+          return jsonWithCors(request, { error: `File exceeds ${MAX_BYTES / 1024 / 1024} MB limit` }, { status: 413 });
         }
 
         const title = ((form.get("title") as string | null) ?? "").slice(0, 200) || null;
@@ -77,7 +103,8 @@ export const Route = createFileRoute("/api/public/tg-upload")({
         };
 
         if (!tgJson.ok || !tgJson.result) {
-          return Response.json(
+          return jsonWithCors(
+            request,
             { error: `Telegram: ${tgJson.description ?? "unknown error"}` },
             { status: 502 },
           );
@@ -104,7 +131,8 @@ export const Route = createFileRoute("/api/public/tg-upload")({
 
         if (!fileId) {
           console.error("[tg-upload] no file_id in result", JSON.stringify(tgJson.result));
-          return Response.json(
+          return jsonWithCors(
+            request,
             { error: `Telegram returned no file_id. Keys: ${Object.keys(tgJson.result).join(",")}` },
             { status: 502 },
           );
@@ -131,10 +159,10 @@ export const Route = createFileRoute("/api/public/tg-upload")({
           .single();
 
         if (insErr || !row) {
-          return Response.json({ error: insErr?.message ?? "Insert failed" }, { status: 500 });
+          return jsonWithCors(request, { error: insErr?.message ?? "Insert failed" }, { status: 500 });
         }
 
-        return Response.json({ id: row.id, file_id: fileId });
+        return jsonWithCors(request, { id: row.id, file_id: fileId });
       },
     },
   },
