@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -11,20 +11,26 @@ import { parseTags } from "@/lib/images";
 import { toast } from "sonner";
 import { ImagePlus, Loader2, X, Images as ImagesIcon } from "lucide-react";
 
+type UploadSearch = { album?: string };
+
 export const Route = createFileRoute("/upload")({
   head: () => ({ meta: [{ title: "Upload — Lumen" }] }),
+  validateSearch: (s: Record<string, unknown>): UploadSearch => ({
+    album: typeof s.album === "string" ? s.album : undefined,
+  }),
   component: UploadPage,
 });
 
 const ACCEPT = "image/png,image/jpeg,image/webp,image/gif,image/avif";
 const MAX_BYTES = 50 * 1024 * 1024;
-const MAX_FILES = 30;
+const MAX_FILES = 15;
 
 type Picked = { file: File; preview: string; title: string };
 
 function UploadPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { album: existingAlbumId } = Route.useSearch();
   const inputRef = useRef<HTMLInputElement>(null);
   const [items, setItems] = useState<Picked[]>([]);
   const [albumTitle, setAlbumTitle] = useState("");
@@ -32,9 +38,43 @@ function UploadPage() {
   const [isPublic, setIsPublic] = useState(true);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [existingAlbumLoading, setExistingAlbumLoading] = useState(false);
+  const [existingAlbumValid, setExistingAlbumValid] = useState(false);
 
   const isAnon = !user;
-  const isAlbum = items.length > 1;
+  const addingToExisting = !!existingAlbumId;
+  const isAlbum = addingToExisting || items.length > 1;
+
+  // Load existing album info if ?album=<id> present
+  useEffect(() => {
+    if (!existingAlbumId || !user) return;
+    let cancelled = false;
+    setExistingAlbumLoading(true);
+    (async () => {
+      const { data, error } = await supabase
+        .from("images")
+        .select("album_title, user_id, is_public")
+        .eq("album_id", existingAlbumId)
+        .limit(1)
+        .maybeSingle();
+      if (cancelled) return;
+      setExistingAlbumLoading(false);
+      if (error || !data) {
+        toast.error("Album not found");
+        return;
+      }
+      if (data.user_id !== user.id) {
+        toast.error("You can only add photos to your own albums");
+        return;
+      }
+      setAlbumTitle(data.album_title ?? "Untitled album");
+      setIsPublic(!!data.is_public);
+      setExistingAlbumValid(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [existingAlbumId, user]);
 
   function addFiles(files: FileList | File[] | null) {
     if (!files) return;
@@ -101,6 +141,10 @@ function UploadPage() {
 
   async function onUpload() {
     if (items.length === 0) return;
+    if (addingToExisting && !existingAlbumValid) {
+      toast.error("Album not loaded");
+      return;
+    }
     setBusy(true);
     setProgress(2);
 
@@ -115,8 +159,11 @@ function UploadPage() {
       }
     }
 
-
-    const album_id = isAlbum ? crypto.randomUUID() : null;
+    const album_id = addingToExisting
+      ? existingAlbumId!
+      : isAlbum
+        ? crypto.randomUUID()
+        : null;
     const album_title = isAlbum ? albumTitle.trim() || "Untitled album" : null;
     const tags = parseTags(tagsInput);
 
@@ -159,7 +206,7 @@ function UploadPage() {
         setProgress(Math.round(((i + 1) / items.length) * 100));
       }
 
-      toast.success(isAlbum ? "Album uploaded" : "Uploaded");
+      toast.success(addingToExisting ? "Photos added to album" : isAlbum ? "Album uploaded" : "Uploaded");
       if (isAlbum && album_id) {
         navigate({ to: "/a/$id", params: { id: album_id } });
       } else {
@@ -172,15 +219,20 @@ function UploadPage() {
     }
   }
 
+  const heading = addingToExisting
+    ? `Add to "${albumTitle || "album"}"`
+    : `Upload ${isAlbum ? "an album" : "images"}`;
+
   return (
     <div className="mx-auto max-w-2xl px-4 py-10">
-      <h1 className="text-2xl font-semibold tracking-tight">
-        Upload {isAlbum ? "an album" : "images"}
-      </h1>
+      <h1 className="text-2xl font-semibold tracking-tight">{heading}</h1>
       <p className="mt-1 text-sm text-muted-foreground">
         JPG, PNG, WebP, GIF, or AVIF · up to 50 MB each · up to {MAX_FILES} files.
         Files are stored in a private Telegram channel — unlimited capacity.
       </p>
+      {addingToExisting && existingAlbumLoading && (
+        <p className="mt-2 text-xs text-muted-foreground">Loading album…</p>
+      )}
 
       <div className="mt-6 space-y-4">
         <button
@@ -250,7 +302,7 @@ function UploadPage() {
           </div>
         )}
 
-        {isAlbum && (
+        {isAlbum && !addingToExisting && (
           <div className="space-y-1.5">
             <Label htmlFor="album">Album title</Label>
             <Input
@@ -276,7 +328,7 @@ function UploadPage() {
           </p>
         </div>
 
-        {!isAnon && (
+        {!isAnon && !addingToExisting && (
           <div className="flex items-center justify-between rounded-xl border border-border/60 bg-card/60 px-4 py-3">
             <div>
               <p className="text-sm font-medium">Public</p>
@@ -293,11 +345,15 @@ function UploadPage() {
         <div className="flex gap-2">
           <Button
             onClick={onUpload}
-            disabled={items.length === 0 || busy}
+            disabled={items.length === 0 || busy || (addingToExisting && !existingAlbumValid)}
             className="flex-1 glow-ring"
           >
             {busy && <Loader2 className="h-4 w-4 animate-spin" />}
-            {isAlbum ? `Upload album (${items.length})` : "Upload"}
+            {addingToExisting
+              ? `Add ${items.length} to album`
+              : isAlbum
+                ? `Upload album (${items.length})`
+                : "Upload"}
           </Button>
           {items.length > 0 && !busy && (
             <Button variant="secondary" onClick={clearAll}>
