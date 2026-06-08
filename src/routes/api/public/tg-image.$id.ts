@@ -29,7 +29,7 @@ export const Route = createFileRoute("/api/public/tg-image/$id")({
         }
 
         const id = params.id;
-        if (!id || !/^[0-9a-f-]{10,}$/i.test(id)) {
+        if (!id || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
           return new Response("Bad request", {
             status: 400,
             headers: corsHeaders(null),

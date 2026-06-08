@@ -3,7 +3,15 @@ import { createFileRoute } from "@tanstack/react-router";
 // Private Telegram channel that backs image storage. Bot must be admin with "Post messages".
 const CHANNEL_ID = "-1002192228589";
 const MAX_BYTES = 50 * 1024 * 1024;
-
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const ALLOWED_MIME = new Set([
+  "image/png",
+  "image/jpeg",
+  "image/jpg",
+  "image/webp",
+  "image/gif",
+  "image/avif",
+]);
 function corsHeaders(origin: string | null) {
   return {
     "Access-Control-Allow-Origin": origin ?? "*",
@@ -11,7 +19,7 @@ function corsHeaders(origin: string | null) {
     "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, Accept, Origin",
     "Access-Control-Max-Age": "86400",
     Vary: "Origin",
-  } as const;
+  } as Record<string, string>;
 }
 
 function jsonWithCors(request: Request, body: unknown, init?: ResponseInit) {
@@ -66,22 +74,46 @@ export const Route = createFileRoute("/api/public/tg-upload")({
         if (file.size > MAX_BYTES) {
           return jsonWithCors(request, { error: `File exceeds ${MAX_BYTES / 1024 / 1024} MB limit` }, { status: 413 });
         }
+        const fileType = (file.type || "").toLowerCase();
+        if (!ALLOWED_MIME.has(fileType)) {
+          return jsonWithCors(
+            request,
+            { error: "Unsupported file type. Allowed: PNG, JPEG, WEBP, GIF, AVIF." },
+            { status: 415 },
+          );
+        }
 
-        const title = ((form.get("title") as string | null) ?? "").slice(0, 200) || null;
+        const rawTitle = (form.get("title") as string | null) ?? "";
+        const title = rawTitle.replace(/[\u0000-\u001F\u007F]/g, "").slice(0, 200).trim() || null;
         const tagsRaw = (form.get("tags") as string | null) ?? "[]";
+        if (tagsRaw.length > 2000) {
+          return jsonWithCors(request, { error: "Tags payload too large" }, { status: 400 });
+        }
         const isPublic = userId ? (form.get("is_public") as string | null) === "true" : true;
-        const albumId = ((form.get("album_id") as string | null) || "").trim() || null;
-        const albumTitle = ((form.get("album_title") as string | null) || "").trim() || null;
+        const albumIdRaw = ((form.get("album_id") as string | null) || "").trim();
+        if (albumIdRaw && !UUID_RE.test(albumIdRaw)) {
+          return jsonWithCors(request, { error: "Invalid album_id" }, { status: 400 });
+        }
+        const albumId = albumIdRaw || null;
+        const albumTitleRaw = ((form.get("album_title") as string | null) || "").trim();
+        const albumTitle =
+          albumTitleRaw.replace(/[\u0000-\u001F\u007F]/g, "").slice(0, 200) || null;
         const widthRaw = Number(form.get("width"));
         const heightRaw = Number(form.get("height"));
-        const width = Number.isFinite(widthRaw) && widthRaw > 0 ? widthRaw : null;
-        const height = Number.isFinite(heightRaw) && heightRaw > 0 ? heightRaw : null;
+        const width =
+          Number.isFinite(widthRaw) && widthRaw > 0 && widthRaw <= 30000 ? Math.floor(widthRaw) : null;
+        const height =
+          Number.isFinite(heightRaw) && heightRaw > 0 && heightRaw <= 30000 ? Math.floor(heightRaw) : null;
 
         let tags: string[] = [];
         try {
           const parsed = JSON.parse(tagsRaw);
           if (Array.isArray(parsed)) {
-            tags = parsed.filter((t) => typeof t === "string").slice(0, 12);
+            tags = parsed
+              .filter((t): t is string => typeof t === "string")
+              .map((t) => t.replace(/[\u0000-\u001F\u007F]/g, "").trim().slice(0, 40))
+              .filter((t) => t.length > 0)
+              .slice(0, 12);
           }
         } catch {
           /* ignore */
