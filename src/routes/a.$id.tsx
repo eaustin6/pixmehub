@@ -108,6 +108,14 @@ function AlbumPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          {user && ownerId === user.id && (
+            <Button variant="secondary" asChild>
+              <Link to="/upload" search={{ album: id }}>
+                <Plus className="h-4 w-4" />
+                Add photos
+              </Link>
+            </Button>
+          )}
           <Button variant="secondary" onClick={copyLink}>
             <Copy className="h-4 w-4" />
             Copy album link
