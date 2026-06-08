@@ -31,6 +31,7 @@ function AlbumPage() {
       if (cancelled) return;
       const rows = (data ?? []) as ImageRow[];
       setTitle(rows[0]?.album_title ?? "Album");
+      setOwnerId(rows[0]?.user_id ?? null);
       const withUrls = await attachUrls(rows);
       if (!cancelled) setItems(withUrls);
     })();
