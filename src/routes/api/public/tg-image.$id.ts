@@ -4,6 +4,9 @@ export const Route = createFileRoute("/api/public/tg-image/$id")({
   server: {
     handlers: {
       GET: async ({ params }) => {
+        const token = process.env.TELEGRAM_BOT_TOKEN;
+        if (!token) return new Response("Server not configured", { status: 500 });
+
         const id = params.id;
         if (!id || !/^[0-9a-f-]{10,}$/i.test(id)) {
           return new Response("Bad request", { status: 400 });
@@ -12,17 +15,13 @@ export const Route = createFileRoute("/api/public/tg-image/$id")({
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { data: row, error } = await supabaseAdmin
           .from("images")
-          .select("telegram_file_id, mime_type, bot_index")
+          .select("telegram_file_id, mime_type")
           .eq("id", id)
           .maybeSingle();
 
         if (error || !row || !row.telegram_file_id) {
           return new Response("Not found", { status: 404 });
         }
-
-        const { getTokenForIndex } = await import("@/lib/telegram-bots.server");
-        const token = getTokenForIndex((row as { bot_index?: number }).bot_index);
-        if (!token) return new Response("Server not configured", { status: 500 });
 
         const gf = await fetch(
           `https://api.telegram.org/bot${token}/getFile?file_id=${encodeURIComponent(row.telegram_file_id)}`,
