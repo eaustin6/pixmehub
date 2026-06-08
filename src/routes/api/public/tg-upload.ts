@@ -8,10 +8,12 @@ export const Route = createFileRoute("/api/public/tg-upload")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const token = process.env.TELEGRAM_BOT_TOKEN;
-        if (!token) {
-          return Response.json({ error: "TELEGRAM_BOT_TOKEN not configured" }, { status: 500 });
+        const { pickBot } = await import("@/lib/telegram-bots.server");
+        const bot = pickBot();
+        if (!bot) {
+          return Response.json({ error: "No TELEGRAM_BOT_TOKEN configured" }, { status: 500 });
         }
+        const token = bot.token;
 
         const auth = request.headers.get("authorization") ?? "";
         const bearer = auth.replace(/^Bearer\s+/i, "");
@@ -116,6 +118,7 @@ export const Route = createFileRoute("/api/public/tg-upload")({
             user_id: userId,
             telegram_file_id: fileId,
             telegram_message_id: tgJson.result.message_id,
+            bot_index: bot.index,
             storage_path: null,
             title,
             width,

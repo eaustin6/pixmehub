@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           album_id: string | null
           album_title: string | null
+          bot_index: number
           created_at: string
           height: number | null
           hidden_reason: string | null
@@ -37,6 +38,7 @@ export type Database = {
         Insert: {
           album_id?: string | null
           album_title?: string | null
+          bot_index?: number
           created_at?: string
           height?: number | null
           hidden_reason?: string | null
@@ -56,6 +58,7 @@ export type Database = {
         Update: {
           album_id?: string | null
           album_title?: string | null
+          bot_index?: number
           created_at?: string
           height?: number | null
           hidden_reason?: string | null
