@@ -194,6 +194,41 @@ export const Route = createFileRoute("/api/public/tg-upload")({
           return jsonWithCors(request, { error: insErr?.message ?? "Insert failed" }, { status: 500 });
         }
 
+        // Mirror metadata to the same Telegram channel as a JSON reply (best-effort, non-blocking).
+        try {
+          const meta = {
+            v: 1,
+            kind: "image_meta",
+            id: row.id,
+            user_id: userId,
+            telegram_file_id: fileId,
+            telegram_message_id: tgJson.result.message_id,
+            title,
+            width,
+            height,
+            size_bytes: file.size,
+            mime_type: file.type || "application/octet-stream",
+            is_public: isPublic,
+            tags,
+            album_id: albumId,
+            album_title: albumTitle,
+            created_at: new Date().toISOString(),
+          };
+          await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              chat_id: CHANNEL_ID,
+              text: "```json\n" + JSON.stringify(meta) + "\n```",
+              parse_mode: "MarkdownV2",
+              reply_to_message_id: tgJson.result.message_id,
+              disable_notification: true,
+            }),
+          }).catch(() => {});
+        } catch {
+          /* ignore mirror failures */
+        }
+
         return jsonWithCors(request, { id: row.id, file_id: fileId });
       },
     },
