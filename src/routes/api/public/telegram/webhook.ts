@@ -72,13 +72,16 @@ async function sendBackup(token: string, chatId: number) {
   );
   await fetch(`${TG_API}/bot${token}/sendDocument`, { method: "POST", body: fd });
 
-  // Also mirror a copy into the storage channel for safekeeping.
-  const fd2 = new FormData();
-  fd2.append("chat_id", CHANNEL_ID);
-  fd2.append("document", blob, `pixmehub-backup-${stamp}.json`);
-  fd2.append("caption", `Auto backup ${stamp}`);
-  fd2.append("disable_notification", "true");
-  await fetch(`${TG_API}/bot${token}/sendDocument`, { method: "POST", body: fd2 });
+  // Archive a copy into the storage channel via the metadata bot (if configured).
+  const metaToken = process.env.TELEGRAM_METADATA_BOT_TOKEN;
+  if (metaToken) {
+    const fd2 = new FormData();
+    fd2.append("chat_id", CHANNEL_ID);
+    fd2.append("document", blob, `pixmehub-backup-${stamp}.json`);
+    fd2.append("caption", `Auto backup ${stamp}`);
+    fd2.append("disable_notification", "true");
+    await fetch(`${TG_API}/bot${metaToken}/sendDocument`, { method: "POST", body: fd2 }).catch(() => {});
+  }
 }
 
 export const Route = createFileRoute("/api/public/telegram/webhook")({
